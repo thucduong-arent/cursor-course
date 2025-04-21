@@ -9,7 +9,7 @@ export default function Dashboard() {
   const [editingKey, setEditingKey] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    limit: '1000',
   });
 
   // Mock API functions - replace with actual API calls
@@ -28,11 +28,12 @@ export default function Dashboard() {
       id: Date.now(),
       name: formData.name,
       key: `sk_test_${Math.random().toString(36).substr(2, 9)}`,
-      description: formData.description,
+      limit: parseInt(formData.limit),
+      usage: 0
     };
     setApiKeys([...apiKeys, newKey]);
     setShowModal(false);
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', limit: '1000' });
   };
 
   const deleteApiKey = async (id) => {
@@ -106,7 +107,7 @@ export default function Dashboard() {
                         setEditingKey(apiKey);
                         setFormData({
                           name: apiKey.name,
-                          description: apiKey.description,
+                          limit: apiKey.limit.toString(),
                         });
                         setShowModal(true);
                       }}
@@ -129,45 +130,54 @@ export default function Dashboard() {
           {/* Modal for Creating/Editing API Keys */}
           {showModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-4">
-                  {editingKey ? 'Edit API Key' : 'Create New API Key'}
-                </h2>
-                <div className="space-y-4">
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md">
+                <h2 className="text-2xl font-bold mb-2">Create a new API key</h2>
+                <p className="text-gray-600 mb-6">Enter a name and limit for the new API key.</p>
+                
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Name</label>
+                    <label className="block text-lg mb-2">
+                      Key Name — A unique name to identify this key
+                    </label>
                     <input
                       type="text"
+                      placeholder="Key Name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-3 border rounded-lg text-lg"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full p-2 border rounded"
-                      rows="3"
+                    <label className="block text-lg mb-2">
+                      Limit monthly usage*
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="1000"
+                      value={formData.limit || '1000'}
+                      onChange={(e) => setFormData({ ...formData, limit: e.target.value })}
+                      className="w-full p-3 border rounded-lg text-lg"
                     />
+                    <p className="text-gray-500 mt-2 text-sm">
+                      * If the combined usage of all your keys exceeds your plan's limit, all requests will be rejected.
+                    </p>
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-3 mt-8">
                     <button
                       onClick={() => {
                         setShowModal(false);
                         setEditingKey(null);
-                        setFormData({ name: '', description: '' });
+                        setFormData({ name: '', limit: '1000' });
                       }}
-                      className="px-4 py-2 border rounded"
+                      className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg text-lg hover:bg-gray-300"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={createApiKey}
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      className="px-6 py-2 bg-blue-500 text-white rounded-lg text-lg hover:bg-blue-600"
                     >
-                      {editingKey ? 'Update' : 'Create'}
+                      Create
                     </button>
                   </div>
                 </div>
