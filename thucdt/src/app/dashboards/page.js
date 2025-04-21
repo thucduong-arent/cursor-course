@@ -99,8 +99,13 @@ export default function Dashboard() {
                   <td className="py-2">{apiKey.usage || 0}</td>
                   <td className="py-2">{apiKey.key}</td>
                   <td className="py-2 flex gap-2">
-                    <button className="p-2 text-gray-600 hover:text-blue-500">
+                    <button className="p-2 text-gray-600 hover:text-blue-500 rounded">
                       <EyeIcon className="h-5 w-5" />
+                    </button>
+                    <button className="p-2 text-gray-600 hover:text-blue-500 rounded">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
                     </button>
                     <button
                       onClick={() => {
@@ -111,13 +116,13 @@ export default function Dashboard() {
                         });
                         setShowModal(true);
                       }}
-                      className="p-2 text-gray-600 hover:text-blue-500"
+                      className="p-2 text-gray-600 hover:text-blue-500 rounded"
                     >
                       <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => deleteApiKey(apiKey.id)}
-                      className="p-2 text-gray-600 hover:text-red-500"
+                      className="p-2 text-gray-600 hover:text-red-500 rounded"
                     >
                       <TrashIcon className="h-5 w-5" />
                     </button>
