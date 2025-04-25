@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [apiKeys, setApiKeys] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
+  const [visibleKeys, setVisibleKeys] = useState(new Set());
   const [formData, setFormData] = useState({
     name: '',
     limit: '1000',
@@ -14,10 +15,13 @@ export default function Dashboard() {
 
   // Mock API functions - replace with actual API calls
   const fetchApiKeys = async () => {
-    // Replace with actual API call
+    // TODO: Replace with actual API call
     const mockKeys = [
-      { id: 1, name: 'Production Key', key: 'sk_test_123', description: 'Main production API key' },
-      { id: 2, name: 'Development Key', key: 'sk_test_456', description: 'Development environment key' },
+      { id: 1, name: "default", usage: 24, value: "tvly-***hhhjjkklll**************************" },
+      { id: 2, name: "tmp1", usage: 0, value: "tvly-*************hshsgsgsg******************" },
+      { id: 3, name: "my-cool-api-key", usage: 0, value: "tvly-***jjjhshsjskk**************************" },
+      { id: 4, name: "hello", usage: 0, value: "tvly-*****************iisbsjksj**************" },
+      { id: 5, name: "cursor", usage: 0, value: "tvly-********skksjsj*************************" },
     ];
     setApiKeys(mockKeys);
   };
@@ -27,8 +31,7 @@ export default function Dashboard() {
     const newKey = {
       id: Date.now(),
       name: formData.name,
-      key: `sk_test_${Math.random().toString(36).substr(2, 9)}`,
-      limit: parseInt(formData.limit),
+      value: "tvly-****************************************",
       usage: 0
     };
     setApiKeys([...apiKeys, newKey]);
@@ -39,6 +42,18 @@ export default function Dashboard() {
   const deleteApiKey = async (id) => {
     // Replace with actual API call
     setApiKeys(apiKeys.filter(key => key.id !== id));
+  };
+
+  const toggleKeyVisibility = (id) => {
+    setVisibleKeys(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   useEffect(() => {
@@ -96,10 +111,15 @@ export default function Dashboard() {
               {apiKeys.map((apiKey) => (
                 <tr key={apiKey.id} className="border-t">
                   <td className="py-2">{apiKey.name}</td>
-                  <td className="py-2">{apiKey.usage || 0}</td>
-                  <td className="py-2">{apiKey.key}</td>
+                  <td className="py-2">{apiKey.usage}</td>
+                  <td className="py-2 font-mono">
+                    {visibleKeys.has(apiKey.id) ? apiKey.value : 'tvly-****************************************'}
+                  </td>
                   <td className="py-2 flex gap-2">
-                    <button className="p-2 text-gray-600 hover:text-blue-500 rounded">
+                    <button 
+                      onClick={() => toggleKeyVisibility(apiKey.id)}
+                      className={`p-2 text-gray-600 hover:text-blue-500 rounded ${visibleKeys.has(apiKey.id) ? 'text-blue-500' : ''}`}
+                    >
                       <EyeIcon className="h-5 w-5" />
                     </button>
                     <button className="p-2 text-gray-600 hover:text-blue-500 rounded">
@@ -112,7 +132,7 @@ export default function Dashboard() {
                         setEditingKey(apiKey);
                         setFormData({
                           name: apiKey.name,
-                          limit: apiKey.limit.toString(),
+                          limit: apiKey.limit?.toString() || '1000',
                         });
                         setShowModal(true);
                       }}
