@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PlusIcon, TrashIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabaseClient';
 import Notification from '../components/Notification';
@@ -19,6 +19,14 @@ export default function Dashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (showModal && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showModal]);
 
   // Show notification helper
   const showNotification = (message, type = 'success') => {
@@ -130,6 +138,24 @@ export default function Dashboard() {
       }
       return newSet;
     });
+  };
+
+  const handleSubmit = async () => {
+    if (editingKey) {
+      await updateApiKey(editingKey.id, { name: formData.name });
+      setShowModal(false);
+      setEditingKey(null);
+      setFormData({ name: '', limit: '1000' });
+    } else {
+      createApiKey();
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && formData.name.trim()) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   useEffect(() => {
@@ -259,70 +285,71 @@ export default function Dashboard() {
           {/* Modal for Creating/Editing API Keys */}
           {showModal && (
             <div className="fixed inset-0 flex items-center justify-center">
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md shadow-xl">
-                <h2 className="text-2xl font-bold mb-2">
-                  {editingKey ? 'Edit API Key' : 'Create a new API key'}
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  {editingKey ? 'Update the name of your API key.' : 'Enter a name and limit for the new API key.'}
-                </p>
-                
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-lg mb-2">
-                      Key Name — A unique name to identify this key
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Key Name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full p-3 border rounded-lg text-lg"
-                    />
-                  </div>
-                  {!editingKey && (
+              <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'invisible' : 'visible'}`}>
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md shadow-xl">
+                  <h2 className="text-2xl font-bold mb-2">
+                    {editingKey ? 'Edit API Key' : 'Create a new API key'}
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    {editingKey ? 'Update the name of your API key.' : 'Enter a name and limit for the new API key.'}
+                  </p>
+                  
+                  <div className="space-y-6">
                     <div>
                       <label className="block text-lg mb-2">
-                        Limit monthly usage*
+                        Key Name — A unique name to identify this key
                       </label>
                       <input
-                        type="number"
-                        placeholder="1000"
-                        value={formData.limit || '1000'}
-                        onChange={(e) => setFormData({ ...formData, limit: e.target.value })}
+                        ref={inputRef}
+                        type="text"
+                        placeholder="Key Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onKeyPress={handleKeyPress}
                         className="w-full p-3 border rounded-lg text-lg"
                       />
-                      <p className="text-gray-500 mt-2 text-sm">
-                        * If the combined usage of all your keys exceeds your plan's limit, all requests will be rejected.
-                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-end gap-3 mt-8">
-                    <button
-                      onClick={() => {
-                        setShowModal(false);
-                        setEditingKey(null);
-                        setFormData({ name: '', limit: '1000' });
-                      }}
-                      className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg text-lg hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (editingKey) {
-                          await updateApiKey(editingKey.id, { name: formData.name });
+                    {!editingKey && (
+                      <div>
+                        <label className="block text-lg mb-2">
+                          Limit monthly usage*
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="1000"
+                          value={formData.limit || '1000'}
+                          onChange={(e) => setFormData({ ...formData, limit: e.target.value })}
+                          onKeyPress={handleKeyPress}
+                          className="w-full p-3 border rounded-lg text-lg"
+                        />
+                        <p className="text-gray-500 mt-2 text-sm">
+                          * If the combined usage of all your keys exceeds your plan's limit, all requests will be rejected.
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-3 mt-8">
+                      <button
+                        onClick={() => {
                           setShowModal(false);
                           setEditingKey(null);
                           setFormData({ name: '', limit: '1000' });
-                        } else {
-                          createApiKey();
-                        }
-                      }}
-                      className="px-6 py-2 bg-blue-500 text-white rounded-lg text-lg hover:bg-blue-600"
-                    >
-                      {editingKey ? 'Save Changes' : 'Create'}
-                    </button>
+                        }}
+                        className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg text-lg hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!formData.name.trim()}
+                        className={`px-6 py-2 rounded-lg text-lg ${
+                          formData.name.trim() 
+                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                            : 'bg-blue-300 text-white cursor-not-allowed'
+                        }`}
+                      >
+                        {editingKey ? 'Save Changes' : 'Create'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
