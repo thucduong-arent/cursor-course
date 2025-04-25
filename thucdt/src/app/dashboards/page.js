@@ -3,18 +3,25 @@
 import { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabaseClient';
+import Notification from '../components/Notification';
 
 export default function Dashboard() {
   const [apiKeys, setApiKeys] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
   const [visibleKeys, setVisibleKeys] = useState(new Set());
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [formData, setFormData] = useState({
     name: '',
     limit: '1000',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Show notification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+  };
 
   // Fetch API keys from Supabase
   const fetchApiKeys = async () => {
@@ -56,6 +63,7 @@ export default function Dashboard() {
       setApiKeys([data, ...apiKeys]);
       setShowModal(false);
       setFormData({ name: '', limit: '1000' });
+      showNotification('API Key created successfully');
     } catch (error) {
       console.error('Error creating API key:', error.message);
     }
@@ -72,6 +80,7 @@ export default function Dashboard() {
       if (error) throw error;
 
       setApiKeys(apiKeys.filter(key => key.id !== id));
+      showNotification('API Key deleted successfully', 'error');
     } catch (error) {
       console.error('Error deleting API key:', error.message);
     }
@@ -90,6 +99,10 @@ export default function Dashboard() {
       if (error) throw error;
 
       setApiKeys(apiKeys.map(key => key.id === id ? data : key));
+      setShowModal(false);
+      setEditingKey(null);
+      setFormData({ name: '', limit: '1000' });
+      showNotification('API Key updated successfully');
     } catch (error) {
       console.error('Error updating API key:', error.message);
     }
@@ -186,9 +199,16 @@ export default function Dashboard() {
                         onClick={() => toggleKeyVisibility(apiKey.id)}
                         className={`p-2 text-gray-600 hover:text-blue-500 rounded ${visibleKeys.has(apiKey.id) ? 'text-blue-500' : ''}`}
                       >
-                        <EyeIcon className="h-5 w-5" />
+                        <EyeIcon className="h-5 w-5" strokeWidth={2} />
                       </button>
-                      <button className="p-2 text-gray-600 hover:text-blue-500 rounded">
+                      <button 
+                        onClick={(e) => {
+                          navigator.clipboard.writeText(apiKey.value);
+                          showNotification('Copied API Key to clipboard');
+                        }}
+                        className="p-2 text-gray-600 hover:text-blue-500 rounded"
+                        title="Copy API Key"
+                      >
                         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
@@ -204,13 +224,15 @@ export default function Dashboard() {
                         }}
                         className="p-2 text-gray-600 hover:text-blue-500 rounded"
                       >
-                        <PencilIcon className="h-5 w-5" />
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => deleteApiKey(apiKey.id)}
                         className="p-2 text-gray-600 hover:text-red-500 rounded"
                       >
-                        <TrashIcon className="h-5 w-5" />
+                        <TrashIcon className="h-5 w-5" strokeWidth={2} />
                       </button>
                     </td>
                   </tr>
@@ -291,6 +313,13 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          <Notification 
+            message={notification.message}
+            isVisible={notification.show}
+            onClose={() => setNotification({ show: false, message: '', type: 'success' })}
+            type={notification.type}
+          />
         </div>
       </div>
     </div>
