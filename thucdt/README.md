@@ -1,3 +1,34 @@
+# ThucDT AI Application
+
+## Environment Setup
+
+To run this application, you need to set up the following environment variables:
+
+1. Create a `.env.local` file in the root directory of the project.
+2. Add the following variables to the file:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+```
+
+Replace `your_supabase_url_here` with your actual Supabase project URL.
+
+## API Key Validation
+
+The application validates API keys against Supabase. To set up the validation:
+
+1. Create a table named `api_keys` in your Supabase project.
+2. Add any necessary columns to the table.
+3. Set up appropriate Row Level Security (RLS) policies for the table.
+
+## Running the Application
+
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:3000.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

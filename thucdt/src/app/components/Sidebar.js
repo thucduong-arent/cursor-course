@@ -28,7 +28,7 @@ export default function Sidebar({ onToggle }) {
     { name: 'Overview', href: '/dashboards', icon: HomeIcon },
     { name: 'Research Assistant', href: '/research-assistant', icon: BeakerIcon },
     { name: 'Research Reports', href: '/research-reports', icon: DocumentTextIcon },
-    { name: 'API Playground', href: '/api-playground', icon: CodeBracketIcon },
+    { name: 'API Playground', href: '/playground', icon: CodeBracketIcon },
     { name: 'Invoices', href: '/invoices', icon: ReceiptPercentIcon },
     { name: 'Documentation', href: '/documentation', icon: BookOpenIcon, external: true },
   ]
