@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabaseClient';
 import Notification from '../components/Notification';
+import Sidebar from '../components/Sidebar';
 
 export default function Dashboard() {
   const [apiKeys, setApiKeys] = useState([]);
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [editingKey, setEditingKey] = useState(null);
   const [visibleKeys, setVisibleKeys] = useState(new Set());
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     limit: '1000',
@@ -135,27 +137,40 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 dark:bg-gray-900 p-4">
-        <nav className="space-y-4">
-          <a href="#" className="block text-lg font-semibold">Overview</a>
-          <a href="#" className="block text-lg">Research Assistant</a>
-          <a href="#" className="block text-lg">Research Reports</a>
-          <a href="#" className="block text-lg">API Playground</a>
-          <a href="#" className="block text-lg">Invoices</a>
-          <a href="#" className="block text-lg">Documentation</a>
-        </nav>
-      </aside>
-
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar onToggle={setIsSidebarCollapsed} />
+      
       {/* Main Content */}
-      <div className="flex-1 p-8">
+      <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-[300px]'} p-8`}>
         {/* Header */}
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-left">Overview</h1>
-          <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-6 rounded-lg mt-4 text-left">
-            <h2 className="text-xl">Researcher</h2>
-            <p>API Limit: 24/1,000 Requests</p>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">Overview</h1>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-1 bg-white rounded-full shadow-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm">Operational</span>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-6 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold">CURRENT PLAN</h2>
+              <button className="px-4 py-1 bg-white/20 rounded-full text-sm hover:bg-white/30">
+                Manage Plan
+              </button>
+            </div>
+            <h3 className="text-2xl font-bold mb-4">Researcher</h3>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span>API Limit</span>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                  <path d="M12 16v-4M12 8h.01" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className="text-lg">24/1,000 Requests</div>
+            </div>
           </div>
         </header>
 
