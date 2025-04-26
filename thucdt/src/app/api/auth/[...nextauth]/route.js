@@ -11,10 +11,17 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: '/auth/signin',
+    error: '/auth/error',
   },
+  debug: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
+        if (!user?.email) {
+          console.error('No email provided in user object')
+          return false
+        }
+
         // Check if user exists in Supabase
         const { data: existingUser, error: fetchError } = await supabase
           .from('users')
@@ -22,9 +29,14 @@ const handler = NextAuth({
           .eq('email', user.email)
           .single()
 
-        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "not found"
-          console.error('Error checking user existence:', fetchError)
-          return false
+        if (fetchError) {
+          if (fetchError.code === 'PGRST116') {
+            // User not found, proceed with creation
+            console.log('User not found, creating new user:', user.email)
+          } else {
+            console.error('Error checking user existence:', fetchError)
+            return false
+          }
         }
 
         // If user doesn't exist, create a new user record
@@ -43,6 +55,8 @@ const handler = NextAuth({
             console.error('Error creating user:', insertError)
             return false
           }
+          
+          console.log('Successfully created new user:', user.email)
         }
 
         return true
@@ -52,6 +66,9 @@ const handler = NextAuth({
       }
     },
     async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.id
+      }
       return session
     },
     async jwt({ token, user }) {
