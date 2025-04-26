@@ -20,12 +20,12 @@ export async function POST(req) {
 
     if (error || !data) {
       return NextResponse.json(
-        { error: 'Invalid API key' },
+        { message: 'Invalid API key' },
         { status: 401 }
       )
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ message: 'Valid API key' })
   } catch (error) {
     return NextResponse.json(
       { error: 'Error validating API key' },

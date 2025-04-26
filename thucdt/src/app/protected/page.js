@@ -25,7 +25,7 @@ export default function Protected() {
       }
 
       try {
-        const response = await fetch('/api/validate', {
+        const response = await fetch('/api/validate-key', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
