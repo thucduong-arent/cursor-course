@@ -3,13 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Notification from '../components/Notification'
-import { createClient } from '@supabase/supabase-js'
-
-// Initialize Supabase client with project URL and anon key
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
 
 export default function Protected() {
   const [showNotification, setShowNotification] = useState(false)
@@ -32,20 +25,18 @@ export default function Protected() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('api_keys')
-          .select('id')
-          .eq('value', apiKey)
-          .single()
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ apiKey })
+        })
+
+        const data = await response.json()
         
-        if (error) {
-          setNotificationMessage('Invalid API key')
-          setNotificationType('error')
-          setTimeout(() => {
-            router.push('/playground')
-          }, 2000)
-        } else if (!data) {
-          setNotificationMessage('Invalid API key')
+        if (!response.ok) {
+          setNotificationMessage(data.error || 'Invalid API key')
           setNotificationType('error')
           setTimeout(() => {
             router.push('/playground')
