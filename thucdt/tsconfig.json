@@ -27,7 +27,8 @@
       "@/*": ["./src/*"],
       "@/components/*": ["./src/components/*"],
       "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"]
+      "@/hooks/*": ["./src/hooks/*"],
+      "@radix-ui/*": ["./node_modules/@radix-ui/*"]
     }
   },
   "include": [

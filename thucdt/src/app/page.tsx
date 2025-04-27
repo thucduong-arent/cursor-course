@@ -8,6 +8,7 @@ import { useState } from 'react'
 
 import { Button } from "@/components/ui/button"
 import SignInButton from "./components/SignInButton"
+import ApiDemo from "./components/api-demo"
 
 export default function LandingPage() {
   const { data: session } = useSession()
@@ -201,6 +202,21 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* API Demo Section */}
+        <section id="api-demo" className="w-full py-8 md:py-12 lg:py-24 bg-muted/50">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter">Try Our API</h2>
+                <p className="max-w-[900px] text-muted-foreground text-base md:text-lg lg:text-xl">
+                  Experience the power of our GitHub Analyzer API with this interactive demo
+                </p>
+              </div>
+            </div>
+            <ApiDemo />
           </div>
         </section>
 
