@@ -55,7 +55,10 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   {session ? (
                     <Link href="/dashboards">
-                      <Button size="lg" className="gap-1.5">
+                      <Button
+                        size="lg"
+                        className="gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg rounded-xl transition-transform hover:scale-105 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-yellow-500"
+                      >
                         Go to Dashboard
                         <ArrowRight className="h-4 w-4" />
                       </Button>
@@ -69,7 +72,11 @@ export default function LandingPage() {
                     </Link>
                   )}
                   <Link href="#features">
-                    <Button size="lg" variant="outline">
+                    <Button
+                      size='lg'
+                      variant='outline'
+                      className='border-yellow-500 text-yellow-600 bg-white/80 rounded-xl hover:bg-yellow-50 hover:border-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500'
+                    >
                       Learn More
                     </Button>
                   </Link>
