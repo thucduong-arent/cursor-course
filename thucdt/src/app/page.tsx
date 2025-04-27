@@ -53,24 +53,13 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  {session ? (
-                    <Link href="/dashboards">
-                      <Button
-                        size="lg"
-                        className="gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg rounded-xl transition-transform hover:scale-105 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-yellow-500"
-                      >
-                        Go to Dashboard
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link href="/auth/signin">
-                      <Button size="lg" className="gap-1.5">
-                        Get Started
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
+                  <Button 
+                    size="lg" 
+                    className="gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg rounded-xl transition-transform hover:scale-105 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-yellow-500"
+                  >
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                   <Link href="#features">
                     <Button
                       size='lg'
@@ -494,19 +483,11 @@ export default function LandingPage() {
               </div>
               <div className="mx-auto w-full max-w-sm space-y-2">
                 <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
-                  {session ? (
-                    <Link href="/dashboards">
-                      <Button size="lg" className="w-full">
-                        Go to Dashboard
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link href="/auth/signin">
-                      <Button size="lg" className="w-full">
-                        Sign Up Now
-                      </Button>
-                    </Link>
-                  )}
+                  <Link href="/auth/signin">
+                    <Button size="lg" className="w-full">
+                      Sign Up Now
+                    </Button>
+                  </Link>
                   <Link href="/contact">
                     <Button size="lg" variant="outline" className="w-full">
                       Contact Us
