@@ -329,7 +329,10 @@ export default function LandingPage() {
                 </div>
               </div>
               {/* Pro Tier */}
-              <div className="flex flex-col rounded-lg border bg-background p-6 shadow-lg">
+              <div className="flex flex-col rounded-lg border bg-background p-6 shadow-lg relative">
+                <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-md">
+                  Coming Soon
+                </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold">Pro</h3>
                   <p className="text-muted-foreground">For individual developers</p>
@@ -409,13 +412,16 @@ export default function LandingPage() {
                   </li>
                 </ul>
                 <div className="mt-6">
-                  <Link href="/signup">
-                    <Button className="w-full">Subscribe</Button>
-                  </Link>
+                  <Button className="w-full" disabled>
+                    Coming Soon
+                  </Button>
                 </div>
               </div>
               {/* Team Tier */}
-              <div className="flex flex-col rounded-lg border bg-background p-6">
+              <div className="flex flex-col rounded-lg border bg-background p-6 relative">
+                <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-md">
+                  Coming Soon
+                </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold">Team</h3>
                   <p className="text-muted-foreground">For development teams</p>
@@ -512,9 +518,9 @@ export default function LandingPage() {
                   </li>
                 </ul>
                 <div className="mt-6">
-                  <Link href="/signup">
-                    <Button className="w-full">Contact Sales</Button>
-                  </Link>
+                  <Button className="w-full" disabled>
+                    Coming Soon
+                  </Button>
                 </div>
               </div>
             </div>
