@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../app/lib/supabaseClient'
+import { supabase } from '../lib/supabaseClient'
 
 export function useApiKeys() {
   const [apiKeys, setApiKeys] = useState([])
