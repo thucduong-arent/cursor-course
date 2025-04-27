@@ -2,24 +2,37 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Github, BarChart3, GitPullRequest, Star, GitBranch, ArrowRight } from "lucide-react"
+import { Github, BarChart3, GitPullRequest, Star, GitBranch, ArrowRight, Menu } from "lucide-react"
 import { useSession } from 'next-auth/react'
+import { useState } from 'react'
 
 import { Button } from "@/components/ui/button"
 import SignInButton from "./components/SignInButton"
 
 export default function LandingPage() {
   const { data: session } = useSession()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Github className="h-6 w-6" />
-            <span className="text-xl font-bold">Thuc Github Analyzer</span>
+            <span className="text-lg md:text-xl font-bold">Thuc Github Analyzer</span>
           </div>
+          
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden p-2"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-6">
             <Link href="#features" className="text-sm font-medium transition-colors hover:text-primary">
               Features
@@ -31,40 +44,75 @@ export default function LandingPage() {
               Pricing
             </Link>
           </nav>
-          <div className="flex items-center gap-4">
+
+          <div className="hidden md:flex items-center gap-4">
             <SignInButton />
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t">
+            <div className="container px-4 py-4 space-y-4">
+              <nav className="flex flex-col gap-4">
+                <Link 
+                  href="#features" 
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Features
+                </Link>
+                <Link 
+                  href="#how-it-works" 
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+                <Link 
+                  href="#pricing" 
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Pricing
+                </Link>
+              </nav>
+              <div className="pt-4 border-t">
+                <SignInButton />
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+        <section className="w-full py-8 md:py-12 lg:py-24 xl:py-32">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+            <div className="grid gap-8 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tighter">
                     Unlock the Power of GitHub Repositories
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  <p className="max-w-[600px] text-muted-foreground text-base md:text-lg lg:text-xl">
                     Get valuable insights, summaries, and analytics on any open source GitHub repository. Track stars,
                     pull requests, and version updates.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     size="lg" 
-                    className="gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg rounded-xl transition-transform hover:scale-105 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-yellow-500"
+                    className="w-full sm:w-auto gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg rounded-xl transition-transform hover:scale-105 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-yellow-500"
                   >
                     Get Started
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                  <Link href="#features">
+                  <Link href="#features" className="w-full sm:w-auto">
                     <Button
                       size='lg'
                       variant='outline'
-                      className='border-yellow-500 text-yellow-600 bg-white/80 rounded-xl hover:bg-yellow-50 hover:border-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500'
+                      className='w-full sm:w-auto border-yellow-500 text-yellow-600 bg-white/80 rounded-xl hover:bg-yellow-50 hover:border-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500'
                     >
                       Learn More
                     </Button>
@@ -72,7 +120,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="flex items-center justify-center">
-                <div className="relative h-[350px] w-full md:h-[450px] lg:h-[500px]">
+                <div className="relative h-[250px] sm:h-[350px] md:h-[450px] lg:h-[500px] w-full">
                   <Image
                     src="/placeholder.svg?height=500&width=500"
                     alt="GitHub Repository Analytics Dashboard"
@@ -87,17 +135,17 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="w-full bg-muted py-12 md:py-24 lg:py-32">
+        <section id="features" className="w-full bg-muted py-8 md:py-12 lg:py-24">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Powerful Features</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter">Powerful Features</h2>
+                <p className="max-w-[900px] text-muted-foreground text-base md:text-lg lg:text-xl">
                   Everything you need to understand and track GitHub repositories
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:gap-6 py-8 md:py-12 sm:grid-cols-2 lg:grid-cols-3">
               <div className="flex flex-col items-center space-y-2 rounded-lg border p-6">
                 <div className="rounded-full bg-primary/10 p-3">
                   <BarChart3 className="h-6 w-6 text-primary" />
@@ -157,17 +205,17 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32">
+        <section id="how-it-works" className="w-full py-8 md:py-12 lg:py-24">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">How It Works</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter">How It Works</h2>
+                <p className="max-w-[900px] text-muted-foreground text-base md:text-lg lg:text-xl">
                   Get started with Thuc Github Analyzer in just a few simple steps
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:gap-6 py-8 md:py-12 sm:grid-cols-2 lg:grid-cols-3">
               <div className="flex flex-col items-center space-y-2 rounded-lg border p-6">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
                   1
@@ -200,15 +248,17 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="w-full bg-muted py-12 md:py-24 lg:py-32">
+        <section id="pricing" className="w-full bg-muted py-8 md:py-12 lg:py-24">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Pricing Plans</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl">Choose the perfect plan for your needs</p>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter">Pricing Plans</h2>
+                <p className="max-w-[900px] text-muted-foreground text-base md:text-lg lg:text-xl">
+                  Choose the perfect plan for your needs
+                </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:gap-6 py-8 md:py-12 sm:grid-cols-2 lg:grid-cols-3">
               {/* Free Tier */}
               <div className="flex flex-col rounded-lg border bg-background p-6">
                 <div className="space-y-2">

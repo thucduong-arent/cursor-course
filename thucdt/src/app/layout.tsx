@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Next.js App',
   description: 'Created with Next.js',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
 interface RootLayoutProps {
@@ -16,8 +17,8 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} min-h-screen antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>
