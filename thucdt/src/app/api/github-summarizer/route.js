@@ -1,33 +1,36 @@
-import { supabase } from '@/lib/supabaseClient'
 import { NextResponse } from 'next/server'
 import { generateSummary } from './chain'
+import { validateApiKey, checkAndIncrementApiKeyUsage } from '@/lib/apiKeyUtils'
 
 export async function POST(req) {
   try {
     const { githubUrl } = await req.json()
     
-    // Get API key from request header
-    const apiKey = req.headers.get('x-api-key')
-
-    // Validate API key
-    if (!apiKey) {
+    // First, validate if the API key exists
+    const { isValid, keyData: validationData, error: validationError } = await validateApiKey(req)
+    
+    if (!isValid) {
       return NextResponse.json(
-        { error: 'API key is required' },
+        { error: validationError },
         { status: 400 }
       )
     }
-
-    // Check if API key is valid
-    const { data: keyData, error: keyError } = await supabase
-      .from('api_keys')
-      .select('id')
-      .eq('value', apiKey)
-      .single()
-
-    if (keyError || !keyData) {
+    
+    // Then, check if the API key has exceeded its limit and increment usage
+    const { isLimited, keyData, error: limitError } = await checkAndIncrementApiKeyUsage(req.headers.get('x-api-key'))
+    
+    if (isLimited) {
       return NextResponse.json(
-        { message: 'Invalid API key' },
-        { status: 401 }
+        { error: limitError },
+        { status: 429 }
+      )
+    }
+    
+    if (limitError) {
+      console.error('Error checking API key limit:', limitError)
+      return NextResponse.json(
+        { error: 'Error checking API key limit' },
+        { status: 500 }
       )
     }
 
