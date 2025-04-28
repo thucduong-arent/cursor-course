@@ -16,7 +16,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   UserCircleIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline'
 
 function UserProfile({ image, name, email, loading, children }) {
@@ -88,6 +89,7 @@ export default function Sidebar({ onToggle }) {
   const menuItems = [
     { name: 'Overview', href: '/dashboards', icon: HomeIcon },
     { name: 'API Playground', href: '/playground', icon: CodeBracketIcon },
+    { name: 'TODO', href: '/todo-app', icon: ClipboardDocumentListIcon },
     { name: 'Invoices', href: '/invoices', icon: ReceiptPercentIcon },
     { name: 'Documentation', href: '/documentation', icon: BookOpenIcon, external: true },
   ]
