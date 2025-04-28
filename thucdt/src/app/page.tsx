@@ -301,7 +301,7 @@ export default function LandingPage() {
                     >
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>5 repositories</span>
+                    <span>Limit to 200 requests</span>
                   </li>
                   <li className="flex items-center">
                     <svg
@@ -358,23 +358,6 @@ export default function LandingPage() {
                   <span className="ml-1 text-sm font-normal text-muted-foreground">/month</span>
                 </div>
                 <ul className="mt-6 space-y-2">
-                  <li className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="mr-2 h-4 w-4 text-primary"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span>25 repositories</span>
-                  </li>
                   <li className="flex items-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -497,40 +480,6 @@ export default function LandingPage() {
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                     <span>Real-time updates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="mr-2 h-4 w-4 text-primary"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span>API access</span>
-                  </li>
-                  <li className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="mr-2 h-4 w-4 text-primary"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span>Priority support</span>
                   </li>
                 </ul>
                 <div className="mt-6">

@@ -3,6 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { BookOpen, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,9 +28,24 @@ export default function ApiDemo() {
     ],
   })
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const { data: session } = useSession()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if user is authenticated
+    if (session) {
+      // If authenticated, redirect to playground
+      router.push('/playground')
+      return
+    } else {
+      // If not authenticated, redirect to login
+      router.push('/auth/signin')
+      return
+    }
+    
+    // The code below will not execute due to the redirects above
     setLoading(true)
     setError(null)
 
@@ -115,10 +132,19 @@ export default function ApiDemo() {
                 ) : (
                   <pre className="text-sm">
                     {`{
-  "summary": "${response.summary}",
+  "message": "GitHub repository summary generated successfully",
+  "summary": "🔎 GPT Researcher is <div align=\"center\" id=\"top\">... This repository contains various features and documentation to help users understand and utilize the project effectively.",
   "cool_facts": [
-${response.cool_facts.map((fact) => `    "${fact}"`).join(",\n")}
-  ]
+    "Objective conclusions for manual research can take weeks, requiring vast resources and time.",
+    "Current LLMs have token limitations, insufficient for generating long research reports.",
+    "Limited web sources in existing services lead to misinformation and shallow results.",
+    "Selective web sources can introduce bias into research tasks.",
+    "Create a task-specific agent based on a research query."
+  ],
+  "stars": 21151,
+  "latestVersion": "v3.2.7",
+  "websiteUrl": "https://gptr.dev",
+  "licenseType": "Apache-2.0"
 }`}
                   </pre>
                 )}
