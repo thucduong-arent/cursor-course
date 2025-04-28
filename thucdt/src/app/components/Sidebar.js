@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
+import Image from 'next/image'
 import {
   HomeIcon,
   BeakerIcon,
@@ -12,22 +14,79 @@ import {
   BookOpenIcon,
   ArrowTopRightOnSquareIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  UserCircleIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
+
+function UserProfile({ image, name, email, loading, children }) {
+	return (
+		<div className="flex items-center gap-3">
+			{loading ? (
+				<div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+			) : image ? (
+				<Image
+					src={image}
+					alt={name}
+					width={32}
+					height={32}
+					className="rounded-full"
+				/>
+			) : (
+				<div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+					<UserCircleIcon className="w-6 h-6 text-purple-500" />
+				</div>
+			)}
+			<div className="flex-1 min-w-0">
+				{loading ? (
+					<>
+						<div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+						<div className="h-3 w-32 bg-gray-200 rounded mt-1 animate-pulse"></div>
+					</>
+				) : (
+					<>
+						<p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+						{typeof email === 'string' ? (
+							<p className="text-xs text-gray-500 truncate">{email}</p>
+						) : email}
+					</>
+				)}
+				{children}
+			</div>
+		</div>
+	)
+}
 
 export default function Sidebar({ onToggle }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { data: session, status } = useSession()
+  const [userDetails, setUserDetails] = useState(null)
+
+  useEffect(() => {
+    if (session?.user) {
+      // Extract user details from the session
+      setUserDetails({
+        name: session.user.name || 'User',
+        email: session.user.email || '',
+        image: session.user.image || null
+      })
+    }
+  }, [session])
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed)
     onToggle?.(!isCollapsed)
   }
 
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
+    router.push('/auth/signin')
+  }
+
   const menuItems = [
     { name: 'Overview', href: '/dashboards', icon: HomeIcon },
-    { name: 'Research Assistant', href: '/research-assistant', icon: BeakerIcon },
-    { name: 'Research Reports', href: '/research-reports', icon: DocumentTextIcon },
     { name: 'API Playground', href: '/playground', icon: CodeBracketIcon },
     { name: 'Invoices', href: '/invoices', icon: ReceiptPercentIcon },
     { name: 'Documentation', href: '/documentation', icon: BookOpenIcon, external: true },
@@ -78,14 +137,38 @@ export default function Sidebar({ onToggle }) {
               )
             })}
           </nav>
+          
+          {/* User Profile Section */}
           <div className="absolute bottom-4 left-4 right-4 p-4 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-300" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Eden Marco</p>
-                <p className="text-xs text-gray-500 truncate">app.thucdt.com/home#</p>
+            {status === 'loading' ? (
+              <UserProfile loading />
+            ) : userDetails ? (
+              <div className="space-y-3">
+                <UserProfile
+                  image={userDetails.image}
+                  name={userDetails.name}
+                  email={userDetails.email}
+                >
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 mt-2"
+                  >
+                    <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </UserProfile>
               </div>
-            </div>
+            ) : (
+              <UserProfile
+                name="Not signed in"
+                email={
+                  <Link href="/auth/signin" className="text-xs text-purple-600 hover:underline">
+                    Sign in
+                  </Link>
+                }
+              />
+            )}
           </div>
         </div>
       </aside>
