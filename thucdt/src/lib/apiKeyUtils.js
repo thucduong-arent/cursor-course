@@ -123,7 +123,7 @@ export async function validateApiKey(req) {
       .from('api_keys')
       .select('id')
       .eq('value', apiKey)
-      .single()
+      .maybeSingle()
 
     if (keyError || !keyData) {
       return {
