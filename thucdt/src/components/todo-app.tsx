@@ -450,7 +450,7 @@ export default function TodoApp() {
         <MainContent 
           sections={sections}
           isLoading={isLoading}
-          selectedProjectId={selectedProjectId}
+          selectedProject={projects.find(p => p.id === selectedProjectId) || null}
           selectedSectionId={selectedSectionId}
           setSelectedSectionId={setSelectedSectionId}
           setIsSectionModalOpen={setIsSectionModalOpen}

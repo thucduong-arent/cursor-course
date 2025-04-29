@@ -20,10 +20,18 @@ type Section = {
   project_id: string
 }
 
+type Project = {
+  id: string
+  name: string
+  count: number
+  selected?: boolean
+  icon?: string
+}
+
 interface MainContentProps {
   sections: Section[]
   isLoading: boolean
-  selectedProjectId: string | null
+  selectedProject: Project | null
   selectedSectionId: string | null
   setSelectedSectionId: (sectionId: string | null) => void
   setIsSectionModalOpen: (open: boolean) => void
@@ -38,7 +46,7 @@ interface MainContentProps {
 export default function MainContent({
   sections,
   isLoading,
-  selectedProjectId,
+  selectedProject,
   selectedSectionId,
   setSelectedSectionId,
   setIsSectionModalOpen,
@@ -49,16 +57,29 @@ export default function MainContent({
   toggleTaskCollapse,
   setNotification
 }: MainContentProps) {
+  if (!selectedProject) {
+    return (
+      <main className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-3xl mx-auto h-full flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">No Project Selected</h2>
+            <p className="text-gray-500">Please select a project to view its tasks and sections.</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="flex-1 overflow-y-auto p-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold">Very real project</h1>
+          <h1 className="text-xl font-bold">{selectedProject.name}</h1>
           <div className="flex items-center gap-2">
             <button 
               className="px-3 py-1 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => setIsSectionModalOpen(true)}
-              disabled={!selectedProjectId}
+              disabled={!selectedProject}
             >
               Add New Section
             </button>
