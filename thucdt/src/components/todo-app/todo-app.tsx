@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import ProjectModal, { ItemType } from "./TodoCreateModal"
+import ProjectModal, { ItemType } from "./CreatingModal"
 import Notification from "@/app/components/Notification"
 import Header from "./Header"
 import Sidebar from "./Sidebar"

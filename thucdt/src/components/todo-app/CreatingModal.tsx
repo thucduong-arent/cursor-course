@@ -18,7 +18,7 @@ interface ApiError extends Error {
   status?: number;
 }
 
-export default function TodoCreateModal({ 
+export default function CreatingModal({ 
   isOpen, 
   onClose, 
   onSubmit, 
