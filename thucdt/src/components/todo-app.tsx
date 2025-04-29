@@ -1,23 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  ChevronDown,
-  ChevronRight,
-  MoreHorizontal,
-  Plus,
-  Search,
-  User,
-  Layout,
-  Bell,
-  HelpCircle,
-  Menu,
-  Home,
-  X,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import ProjectModal, { ItemType } from "./ProjectModal"
+import ProjectModal, { ItemType } from "./TodoCreateModal"
 import Notification from "@/app/components/Notification"
+import Header from "./Header"
+import Sidebar from "./Sidebar"
+import MainContent from "./MainContent"
+import DeleteConfirmationModal from "./DeleteConfirmationModal"
 
 type Task = {
   id: string
@@ -444,270 +433,34 @@ export default function TodoApp() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <header className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-2 flex items-center gap-2">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 rounded hover:bg-white/20">
-          <Menu size={18} />
-        </button>
-        <button className="p-1 rounded hover:bg-white/20">
-          <Home size={18} />
-        </button>
-        <div className="flex items-center bg-white/20 rounded px-2 py-1 flex-1 max-w-md">
-          <Search size={16} className="mr-2 text-white/70" />
-          <span className="text-white/70 text-sm">Search</span>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-            <span className="text-xs">⭐</span> Upgrade to Pro
-          </span>
-          <button className="p-1 rounded hover:bg-white/20">
-            <Plus size={18} />
-          </button>
-          <button className="p-1 rounded hover:bg-white/20">
-            <Bell size={18} />
-          </button>
-          <button className="p-1 rounded hover:bg-white/20">
-            <HelpCircle size={18} />
-          </button>
-          <button className="p-1 rounded hover:bg-white/20">
-            <User size={18} />
-          </button>
-        </div>
-      </header>
+      <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        {sidebarOpen && (
-          <aside className="w-64 border-r overflow-y-auto bg-gray-50 flex-shrink-0">
-            <nav className="p-4">
-              <ul className="space-y-1">
-                <li className="flex items-center gap-2 p-2 rounded hover:bg-gray-200">
-                  <span className="text-blue-500">
-                    <Layout size={16} />
-                  </span>
-                  <span>Inbox</span>
-                  <span className="ml-auto text-gray-400 text-sm">8</span>
-                </li>
-                <li className="flex items-center gap-2 p-2 rounded hover:bg-gray-200">
-                  <span className="text-green-500">
-                    <Layout size={16} />
-                  </span>
-                  <span>Today</span>
-                  <span className="ml-auto text-gray-400 text-sm">7</span>
-                </li>
-                <li className="flex items-center gap-2 p-2 rounded hover:bg-gray-200">
-                  <span className="text-purple-500">
-                    <Layout size={16} />
-                  </span>
-                  <span>Upcoming</span>
-                </li>
-                <li className="flex items-center gap-2 p-2 rounded hover:bg-gray-200">
-                  <span className="text-orange-500">
-                    <Layout size={16} />
-                  </span>
-                  <span>Filters & Labels</span>
-                </li>
-              </ul>
-
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium">My Projects</h3>
-                  <div className="flex items-center gap-1">
-                    <button
-                      className="p-1 rounded hover:bg-gray-200"
-                      onClick={() => setIsProjectModalOpen(true)}
-                    >
-                      <Plus size={16} className="text-gray-500" />
-                    </button>
-                  </div>
-                </div>
-                <ul className="space-y-1">
-                  {isLoading ? (
-                    <li className="flex items-center justify-center p-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
-                      <span className="ml-2 text-gray-500">Loading projects...</span>
-                    </li>
-                  ) : projects.length === 0 ? (
-                    <li className="flex items-center justify-center p-4 text-gray-500">
-                      No projects found. Create one to get started.
-                    </li>
-                  ) : (
-                    projects.map((project) => (
-                      <li
-                        key={project.id}
-                        className={cn(
-                          "flex items-center gap-2 p-2 rounded",
-                          project.selected ? "bg-gray-200" : "hover:bg-gray-200",
-                        )}
-                      >
-                        <div 
-                          className="flex items-center gap-2 flex-1 cursor-pointer"
-                          onClick={() => selectProject(project.id)}
-                        >
-                          <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                          <span>
-                            {project.name} {project.icon}
-                          </span>
-                          <span className="ml-auto text-gray-400 text-sm">{project.count}</span>
-                        </div>
-                        <button
-                          className="p-1 rounded hover:bg-gray-300 text-gray-500"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirmProjectId(project.id);
-                          }}
-                        >
-                          <X size={14} />
-                        </button>
-                      </li>
-                    ))
-                  )}
-                </ul>
-              </div>
-            </nav>
-          </aside>
-        )}
+        <Sidebar 
+          sidebarOpen={sidebarOpen}
+          projects={projects}
+          isLoading={isLoading}
+          setIsProjectModalOpen={setIsProjectModalOpen}
+          selectProject={selectProject}
+          setDeleteConfirmProjectId={setDeleteConfirmProjectId}
+        />
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold">Very real project</h1>
-              <div className="flex items-center gap-2">
-                <button 
-                  className="px-3 py-1 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => setIsSectionModalOpen(true)}
-                  disabled={!selectedProjectId}
-                >
-                  Add New Section
-                </button>
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <User size={18} className="text-gray-500" />
-                </button>
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <Layout size={18} className="text-gray-500" />
-                </button>
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <MoreHorizontal size={18} className="text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-            ) : (
-              <>
-                <button 
-                  className="w-full text-left mb-4 flex items-center text-gray-500 hover:bg-gray-100 p-2 rounded"
-                  onClick={() => {
-                    if (sections.length > 0) {
-                      setSelectedSectionId(sections[0].id)
-                      setIsTaskModalOpen(true)
-                    } else {
-                      setNotification({
-                        show: true,
-                        message: 'Please create a section first',
-                        type: 'error'
-                      })
-                    }
-                  }}
-                >
-                  <Plus size={16} className="mr-2" />
-                  Add task
-                </button>
-
-                {/* Sections */}
-                {sections.map((section) => (
-                  <div key={section.id} className="mb-6">
-                    <div className="flex items-center mb-2 cursor-pointer" onClick={() => toggleSection(section.id)}>
-                      {section.collapsed ? (
-                        <ChevronRight size={18} className="text-gray-400" />
-                      ) : (
-                        <ChevronDown size={18} className="text-gray-400" />
-                      )}
-                      <h2 className="font-medium ml-1">{section.name}</h2>
-                      <span className="ml-2 text-gray-400 text-sm">{section.tasks.length}</span>
-                      <button className="ml-auto p-1 rounded hover:bg-gray-100">
-                        <MoreHorizontal size={16} className="text-gray-400" />
-                      </button>
-                    </div>
-
-                    {!section.collapsed && (
-                      <div className="pl-6 space-y-2">
-                        {section.tasks.map((task) => (
-                          <div key={task.id} className="space-y-2">
-                            <div className="flex items-start gap-2">
-                              <button
-                                onClick={() => toggleTask(section.id, task.id)}
-                                className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                              >
-                                {task.completed && <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>}
-                              </button>
-                              <div className="flex-1">
-                                <div className="flex items-start">
-                                  <span className={cn(task.completed && "line-through text-gray-400")}>{task.title}</span>
-                                </div>
-                                {task.due_date && (
-                                  <div className="mt-1">
-                                    <span
-                                      className={cn(
-                                        "text-xs px-1.5 py-0.5 rounded",
-                                        task.due_date === "Tomorrow"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : task.due_date === "Monday"
-                                            ? "bg-purple-100 text-purple-800"
-                                            : "bg-gray-100 text-gray-800",
-                                      )}
-                                    >
-                                      {task.due_date}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Subtasks */}
-                            {task.subtasks && task.subtasks.length > 0 && !task.collapsed && (
-                              <div className="pl-7 space-y-2">
-                                {task.subtasks.map((subtask) => (
-                                  <div key={subtask.id} className="flex items-start gap-2">
-                                    <button
-                                      onClick={() => toggleSubtask(section.id, task.id, subtask.id)}
-                                      className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                                    >
-                                      {subtask.completed && (
-                                        <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>
-                                      )}
-                                    </button>
-                                    <span className={cn(subtask.completed && "line-through text-gray-400")}>
-                                      {subtask.title}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-
-                        <button 
-                          className="flex items-center text-gray-500 hover:bg-gray-100 p-1 rounded"
-                          onClick={() => {
-                            setSelectedSectionId(section.id)
-                            setIsTaskModalOpen(true)
-                          }}
-                        >
-                          <Plus size={16} className="mr-2" />
-                          Add task
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </main>
+        <MainContent 
+          sections={sections}
+          isLoading={isLoading}
+          selectedProjectId={selectedProjectId}
+          selectedSectionId={selectedSectionId}
+          setSelectedSectionId={setSelectedSectionId}
+          setIsSectionModalOpen={setIsSectionModalOpen}
+          setIsTaskModalOpen={setIsTaskModalOpen}
+          toggleSection={toggleSection}
+          toggleTask={toggleTask}
+          toggleSubtask={toggleSubtask}
+          toggleTaskCollapse={toggleTaskCollapse}
+          setNotification={setNotification}
+        />
       </div>
 
       {/* Project Creation Modal */}
@@ -735,29 +488,12 @@ export default function TodoApp() {
       />
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmProjectId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-medium mb-4">Delete Project</h3>
-            <p className="mb-6">Are you sure you want to delete this project? This action cannot be undone.</p>
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                onClick={() => setDeleteConfirmProjectId(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
-                onClick={() => handleDeleteProject(deleteConfirmProjectId)}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationModal 
+        deleteConfirmProjectId={deleteConfirmProjectId}
+        isLoading={isLoading}
+        setDeleteConfirmProjectId={setDeleteConfirmProjectId}
+        handleDeleteProject={handleDeleteProject}
+      />
 
       {/* Notification */}
       <Notification
