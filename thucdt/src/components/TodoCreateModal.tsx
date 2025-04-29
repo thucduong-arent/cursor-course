@@ -36,6 +36,12 @@ export default function TodoCreateModal({
     }
   }, [isOpen])
 
+  const handleClose = () => {
+    setItemName('')
+    setError(null)
+    onClose()
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!itemName.trim()) return
@@ -122,7 +128,7 @@ export default function TodoCreateModal({
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-2xl font-bold">{getTitle()}</h2>
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
             aria-label="Close modal"
           >
@@ -145,6 +151,17 @@ export default function TodoCreateModal({
                 disabled={isSubmitting}
                 className={`w-full p-3 border rounded-lg text-lg ${error ? 'border-red-500' : ''}`}
                 autoComplete="off"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    if (itemName.trim() && !isSubmitting) {
+                      handleSubmit(e)
+                    }
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    handleClose()
+                  }
+                }}
               />
               {error && (
                 <p className="mt-2 text-red-500 text-sm">{error}</p>
@@ -153,7 +170,7 @@ export default function TodoCreateModal({
             
             <div className="flex justify-end gap-3 mt-8">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isSubmitting}
                 className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg text-lg hover:bg-gray-300"
               >
