@@ -16,24 +16,26 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import ProjectModal from "./ProjectModal"
+import ProjectModal, { ItemType } from "./ProjectModal"
 import Notification from "@/app/components/Notification"
 
 type Task = {
   id: string
-  text: string
+  title: string
   completed: boolean
-  date?: string
+  due_date?: string
+  parent_task_id?: string | null
   subtasks?: Task[]
   collapsed?: boolean
+  section_id: string
 }
 
 type Section = {
   id: string
-  title: string
+  name: string
   tasks: Task[]
   collapsed: boolean
-  count: number
+  project_id: string
 }
 
 type Project = {
@@ -47,27 +49,28 @@ type Project = {
 const initialSections: Section[] = [
   {
     id: "section-1",
-    title: "This is a section",
+    name: "This is a section",
     collapsed: false,
-    count: 2,
+    project_id: "default",
     tasks: [
-      { id: "task-1-1", text: "This is a task for me to do", completed: false, date: "Tomorrow" },
-      { id: "task-1-2", text: "And another task", completed: false, date: "Monday" },
+      { id: "task-1-1", title: "This is a task for me to do", completed: false, due_date: "Tomorrow", section_id: "section-1" },
+      { id: "task-1-2", title: "And another task", completed: false, due_date: "Monday", section_id: "section-1" },
     ],
   },
   {
     id: "section-2",
-    title: "This is another section",
+    name: "This is another section",
     collapsed: false,
-    count: 2,
+    project_id: "default",
     tasks: [
       {
         id: "task-2-1",
-        text: "Oh look, more tasks",
+        title: "Oh look, more tasks",
         completed: false,
-        date: "0/1",
+        due_date: "0/1",
         collapsed: false,
-        subtasks: [{ id: "subtask-2-1-1", text: "With sub-tasks!", completed: false }],
+        section_id: "section-2",
+        subtasks: [{ id: "subtask-2-1-1", title: "With sub-tasks!", completed: false, section_id: "section-2" }],
       },
     ],
   },
@@ -123,11 +126,58 @@ async function deleteProject(projectId: string) {
   }
 }
 
+// Function to fetch sections and tasks for a project
+async function fetchProjectData(projectId: string) {
+  try {
+    // Fetch sections for the project
+    const sectionsResponse = await fetch(`/api/sections?project_id=${projectId}`)
+    if (!sectionsResponse.ok) {
+      throw new Error('Failed to fetch sections')
+    }
+    const sectionsData = await sectionsResponse.json()
+
+    // Fetch tasks for the project
+    const tasksResponse = await fetch(`/api/tasks?project_id=${projectId}`)
+    if (!tasksResponse.ok) {
+      throw new Error('Failed to fetch tasks')
+    }
+    const tasksData = await tasksResponse.json()
+
+    // Group tasks by section
+    const sections = sectionsData.sections.map((section: any) => {
+      const sectionTasks = tasksData.tasks
+        .filter((task: Task) => task.section_id === section.id)
+        .map((task: Task) => ({
+          ...task,
+          completed: task.completed || false,
+          collapsed: false
+        }))
+
+      return {
+        id: section.id,
+        name: section.name,
+        tasks: sectionTasks,
+        collapsed: false,
+        project_id: section.project_id
+      }
+    })
+
+    return sections
+  } catch (error) {
+    console.error('Error fetching project data:', error)
+    throw error
+  }
+}
+
 export default function TodoApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sections, setSections] = useState<Section[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
+  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [notification, setNotification] = useState({
     show: false,
@@ -214,13 +264,31 @@ export default function TodoApp() {
     )
   }
 
-  const selectProject = (projectId: string) => {
-    setProjects(
-      projects.map((project) => ({
-        ...project,
-        selected: project.id === projectId,
-      })),
-    )
+  const selectProject = async (projectId: string) => {
+    setIsLoading(true)
+    try {
+      // Update selected state in projects list
+      setProjects(
+        projects.map((project) => ({
+          ...project,
+          selected: project.id === projectId,
+        })),
+      )
+      setSelectedProjectId(projectId)
+
+      // Fetch and set sections and tasks for the selected project
+      const projectSections = await fetchProjectData(projectId)
+      setSections(projectSections)
+    } catch (error) {
+      console.error('Error loading project data:', error)
+      setNotification({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to load project data',
+        type: 'error'
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCreateProject = async (name: string) => {
@@ -293,6 +361,83 @@ export default function TodoApp() {
     } finally {
       setIsLoading(false)
       setDeleteConfirmProjectId(null)
+    }
+  }
+
+  const handleCreateSection = async (name: string) => {
+    if (!selectedProjectId) {
+      throw new Error('Please select a project first')
+    }
+
+    try {
+      const response = await fetch('/api/sections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          project_id: selectedProjectId
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create section')
+      }
+
+      // Refresh the sections
+      const updatedSections = await fetchProjectData(selectedProjectId)
+      setSections(updatedSections)
+
+      setNotification({
+        show: true,
+        message: 'Section created successfully',
+        type: 'success'
+      })
+    } catch (error) {
+      console.error('Error creating section:', error)
+      throw error
+    }
+  }
+
+  const handleCreateTask = async (name: string) => {
+    if (!selectedProjectId || !selectedSectionId) {
+      throw new Error('Please select a project and section first')
+    }
+
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: name,
+          section_id: selectedSectionId,
+          project_id: selectedProjectId
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create task')
+      }
+
+      // Refresh the sections
+      const updatedSections = await fetchProjectData(selectedProjectId)
+      setSections(updatedSections)
+
+      setNotification({
+        show: true,
+        message: 'Task created successfully',
+        type: 'success'
+      })
+    } catch (error) {
+      console.error('Error creating task:', error)
+      throw error
     }
   }
 
@@ -428,6 +573,13 @@ export default function TodoApp() {
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-xl font-bold">Very real project</h1>
               <div className="flex items-center gap-2">
+                <button 
+                  className="px-3 py-1 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setIsSectionModalOpen(true)}
+                  disabled={!selectedProjectId}
+                >
+                  Add New Section
+                </button>
                 <button className="p-1 rounded hover:bg-gray-100">
                   <User size={18} className="text-gray-500" />
                 </button>
@@ -440,92 +592,120 @@ export default function TodoApp() {
               </div>
             </div>
 
-            <button className="w-full text-left mb-4 flex items-center text-gray-500 hover:bg-gray-100 p-2 rounded">
-              <Plus size={16} className="mr-2" />
-              Add task
-            </button>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : (
+              <>
+                <button 
+                  className="w-full text-left mb-4 flex items-center text-gray-500 hover:bg-gray-100 p-2 rounded"
+                  onClick={() => {
+                    if (sections.length > 0) {
+                      setSelectedSectionId(sections[0].id)
+                      setIsTaskModalOpen(true)
+                    } else {
+                      setNotification({
+                        show: true,
+                        message: 'Please create a section first',
+                        type: 'error'
+                      })
+                    }
+                  }}
+                >
+                  <Plus size={16} className="mr-2" />
+                  Add task
+                </button>
 
-            {/* Sections */}
-            {sections.map((section) => (
-              <div key={section.id} className="mb-6">
-                <div className="flex items-center mb-2 cursor-pointer" onClick={() => toggleSection(section.id)}>
-                  {section.collapsed ? (
-                    <ChevronRight size={18} className="text-gray-400" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400" />
-                  )}
-                  <h2 className="font-medium ml-1">{section.title}</h2>
-                  <span className="ml-2 text-gray-400 text-sm">{section.count}</span>
-                  <button className="ml-auto p-1 rounded hover:bg-gray-100">
-                    <MoreHorizontal size={16} className="text-gray-400" />
-                  </button>
-                </div>
+                {/* Sections */}
+                {sections.map((section) => (
+                  <div key={section.id} className="mb-6">
+                    <div className="flex items-center mb-2 cursor-pointer" onClick={() => toggleSection(section.id)}>
+                      {section.collapsed ? (
+                        <ChevronRight size={18} className="text-gray-400" />
+                      ) : (
+                        <ChevronDown size={18} className="text-gray-400" />
+                      )}
+                      <h2 className="font-medium ml-1">{section.name}</h2>
+                      <span className="ml-2 text-gray-400 text-sm">{section.tasks.length}</span>
+                      <button className="ml-auto p-1 rounded hover:bg-gray-100">
+                        <MoreHorizontal size={16} className="text-gray-400" />
+                      </button>
+                    </div>
 
-                {!section.collapsed && (
-                  <div className="pl-6 space-y-2">
-                    {section.tasks.map((task) => (
-                      <div key={task.id} className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <button
-                            onClick={() => toggleTask(section.id, task.id)}
-                            className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                          >
-                            {task.completed && <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>}
-                          </button>
-                          <div className="flex-1">
-                            <div className="flex items-start">
-                              <span className={cn(task.completed && "line-through text-gray-400")}>{task.text}</span>
+                    {!section.collapsed && (
+                      <div className="pl-6 space-y-2">
+                        {section.tasks.map((task) => (
+                          <div key={task.id} className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <button
+                                onClick={() => toggleTask(section.id, task.id)}
+                                className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                              >
+                                {task.completed && <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>}
+                              </button>
+                              <div className="flex-1">
+                                <div className="flex items-start">
+                                  <span className={cn(task.completed && "line-through text-gray-400")}>{task.title}</span>
+                                </div>
+                                {task.due_date && (
+                                  <div className="mt-1">
+                                    <span
+                                      className={cn(
+                                        "text-xs px-1.5 py-0.5 rounded",
+                                        task.due_date === "Tomorrow"
+                                          ? "bg-yellow-100 text-yellow-800"
+                                          : task.due_date === "Monday"
+                                            ? "bg-purple-100 text-purple-800"
+                                            : "bg-gray-100 text-gray-800",
+                                      )}
+                                    >
+                                      {task.due_date}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            {task.date && (
-                              <div className="mt-1">
-                                <span
-                                  className={cn(
-                                    "text-xs px-1.5 py-0.5 rounded",
-                                    task.date === "Tomorrow"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : task.date === "Monday"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-800",
-                                  )}
-                                >
-                                  {task.date}
-                                </span>
+
+                            {/* Subtasks */}
+                            {task.subtasks && task.subtasks.length > 0 && !task.collapsed && (
+                              <div className="pl-7 space-y-2">
+                                {task.subtasks.map((subtask) => (
+                                  <div key={subtask.id} className="flex items-start gap-2">
+                                    <button
+                                      onClick={() => toggleSubtask(section.id, task.id, subtask.id)}
+                                      className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                                    >
+                                      {subtask.completed && (
+                                        <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>
+                                      )}
+                                    </button>
+                                    <span className={cn(subtask.completed && "line-through text-gray-400")}>
+                                      {subtask.title}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
-                        </div>
+                        ))}
 
-                        {/* Subtasks */}
-                        {task.subtasks && task.subtasks.length > 0 && !task.collapsed && (
-                          <div className="pl-7 space-y-2">
-                            {task.subtasks.map((subtask) => (
-                              <div key={subtask.id} className="flex items-start gap-2">
-                                <button
-                                  onClick={() => toggleSubtask(section.id, task.id, subtask.id)}
-                                  className="mt-1 w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                                >
-                                  {subtask.completed && (
-                                    <span className="block w-3 h-3 m-auto rounded-full bg-gray-400"></span>
-                                  )}
-                                </button>
-                                <span className={cn(subtask.completed && "line-through text-gray-400")}>
-                                  {subtask.text}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <button 
+                          className="flex items-center text-gray-500 hover:bg-gray-100 p-1 rounded"
+                          onClick={() => {
+                            setSelectedSectionId(section.id)
+                            setIsTaskModalOpen(true)
+                          }}
+                        >
+                          <Plus size={16} className="mr-2" />
+                          Add task
+                        </button>
                       </div>
-                    ))}
-
-                    <button className="flex items-center text-gray-500 hover:bg-gray-100 p-1 rounded">
-                      <Plus size={16} className="mr-2" />
-                      Add task
-                    </button>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                ))}
+              </>
+            )}
           </div>
         </main>
       </div>
@@ -535,6 +715,23 @@ export default function TodoApp() {
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
         onSubmit={handleCreateProject}
+        type="project"
+      />
+
+      {/* Section Creation Modal */}
+      <ProjectModal
+        isOpen={isSectionModalOpen}
+        onClose={() => setIsSectionModalOpen(false)}
+        onSubmit={handleCreateSection}
+        type="section"
+      />
+
+      {/* Task Creation Modal */}
+      <ProjectModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onSubmit={handleCreateTask}
+        type="task"
       />
 
       {/* Delete Confirmation Modal */}

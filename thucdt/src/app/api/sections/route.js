@@ -135,6 +135,30 @@ export async function POST(request) {
       )
     }
 
+    // Check if a section with the same name already exists in this project
+    const { data: existingSection, error: existingSectionError } = await supabase
+      .from('sections')
+      .select('id')
+      .eq('project_id', project_id)
+      .eq('name', name)
+      .single()
+
+    if (existingSectionError && existingSectionError.code !== 'PGRST116') {
+      // PGRST116 is the error code for "no rows returned" which is expected
+      console.error('Error checking for existing section:', existingSectionError)
+      return NextResponse.json(
+        { error: 'Failed to check for existing section' },
+        { status: 500 }
+      )
+    }
+
+    if (existingSection) {
+      return NextResponse.json(
+        { error: 'A section with this name already exists in this project' },
+        { status: 409 }
+      )
+    }
+
     // Create new section
     const { data, error } = await supabase
       .from('sections')
