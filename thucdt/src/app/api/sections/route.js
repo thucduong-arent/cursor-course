@@ -144,7 +144,6 @@ export async function POST(request) {
       .single()
 
     if (existingSectionError && existingSectionError.code !== 'PGRST116') {
-      // PGRST116 is the error code for "no rows returned" which is expected
       console.error('Error checking for existing section:', existingSectionError)
       return NextResponse.json(
         { error: 'Failed to check for existing section' },

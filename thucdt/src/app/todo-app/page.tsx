@@ -1,6 +1,6 @@
 "use client"
 
-import TodoApp from "@/components/todo-app"
+import TodoApp from "@/components/todo-app/todo-app"
 
 export default function Home() {
   return (

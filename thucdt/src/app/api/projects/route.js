@@ -93,7 +93,7 @@ export async function POST(request) {
       .eq('name', name)
       .single()
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+    if (checkError && checkError.code !== 'PGRST116') {
       console.error('Error checking for existing project:', checkError)
       return NextResponse.json(
         { error: 'Failed to check for existing project' },
