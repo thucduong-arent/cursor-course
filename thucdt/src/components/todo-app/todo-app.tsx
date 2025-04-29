@@ -33,6 +33,7 @@ type Project = {
   count: number
   selected?: boolean
   icon?: string
+  sectionTaskCounts?: Record<string, number>
 }
 
 const initialSections: Section[] = [
@@ -206,51 +207,110 @@ export default function TodoApp() {
   }
 
   const toggleTask = (sectionId: string, taskId: string) => {
-    setSections(
-      sections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)),
-            }
-          : section,
-      ),
+    // Update the sections state
+    const updatedSections = sections.map((section) =>
+      section.id === sectionId
+        ? {
+            ...section,
+            tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)),
+          }
+        : section,
     )
+    
+    setSections(updatedSections)
+    
+    // Update task counts if a project is selected
+    if (selectedProjectId) {
+      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+      setProjects(projects.map(project => 
+        project.id === selectedProjectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
+    }
   }
 
   const toggleSubtask = (sectionId: string, taskId: string, subtaskId: string) => {
-    setSections(
-      sections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              tasks: section.tasks.map((task) =>
-                task.id === taskId
-                  ? {
-                      ...task,
-                      subtasks: task.subtasks?.map((subtask) =>
-                        subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
-                      ),
-                    }
-                  : task,
-              ),
-            }
-          : section,
-      ),
+    // Update the sections state
+    const updatedSections = sections.map((section) =>
+      section.id === sectionId
+        ? {
+            ...section,
+            tasks: section.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                    ...task,
+                    subtasks: task.subtasks?.map((subtask) =>
+                      subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
+                    ),
+                  }
+                : task,
+            ),
+          }
+        : section,
     )
+    
+    setSections(updatedSections)
+    
+    // Update task counts if a project is selected
+    if (selectedProjectId) {
+      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+      setProjects(projects.map(project => 
+        project.id === selectedProjectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
+    }
   }
 
   const toggleTaskCollapse = (sectionId: string, taskId: string) => {
-    setSections(
-      sections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, collapsed: !task.collapsed } : task)),
-            }
-          : section,
-      ),
+    // Update the sections state
+    const updatedSections = sections.map((section) =>
+      section.id === sectionId
+        ? {
+            ...section,
+            tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, collapsed: !task.collapsed } : task)),
+          }
+        : section,
     )
+    
+    setSections(updatedSections)
+    
+    // Update task counts if a project is selected
+    if (selectedProjectId) {
+      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+      setProjects(projects.map(project => 
+        project.id === selectedProjectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
+    }
+  }
+
+  // Function to count tasks by section for the current project
+  const countTasksBySection = (projectId: string, sections: Section[]): Record<string, number> => {
+    const sectionTaskCounts: Record<string, number> = {}
+    
+    // Count tasks for each section
+    sections.forEach(section => {
+      if (section.project_id === projectId) {
+        // Count all uncompleted tasks, regardless of whether they're collapsed or not
+        const uncompletedTasks = section.tasks.filter(task => !task.completed)
+        
+        // Count uncompleted subtasks as well
+        const uncompletedSubtasks = uncompletedTasks.reduce((count, task) => {
+          if (task.subtasks) {
+            return count + task.subtasks.filter(subtask => !subtask.completed).length
+          }
+          return count
+        }, 0)
+        
+        // Total count is the sum of uncompleted tasks and uncompleted subtasks
+        sectionTaskCounts[section.id] = uncompletedTasks.length + uncompletedSubtasks
+      }
+    })
+    
+    return sectionTaskCounts
   }
 
   const selectProject = async (projectId: string) => {
@@ -268,6 +328,14 @@ export default function TodoApp() {
       // Fetch and set sections and tasks for the selected project
       const projectSections = await fetchProjectData(projectId)
       setSections(projectSections)
+      
+      // Count tasks by section and update the project
+      const sectionTaskCounts = countTasksBySection(projectId, projectSections)
+      setProjects(projects.map(project => 
+        project.id === projectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
     } catch (error) {
       console.error('Error loading project data:', error)
       setNotification({
@@ -382,6 +450,14 @@ export default function TodoApp() {
       // Refresh the sections
       const updatedSections = await fetchProjectData(selectedProjectId)
       setSections(updatedSections)
+      
+      // Update task counts by section
+      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+      setProjects(projects.map(project => 
+        project.id === selectedProjectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
 
       setNotification({
         show: true,
@@ -421,6 +497,14 @@ export default function TodoApp() {
       // Refresh the sections
       const updatedSections = await fetchProjectData(selectedProjectId)
       setSections(updatedSections)
+      
+      // Update task counts by section
+      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+      setProjects(projects.map(project => 
+        project.id === selectedProjectId 
+          ? { ...project, sectionTaskCounts } 
+          : project
+      ))
 
       setNotification({
         show: true,
@@ -438,6 +522,14 @@ export default function TodoApp() {
       try {
         const updatedSections = await fetchProjectData(selectedProjectId)
         setSections(updatedSections)
+        
+        // Update task counts by section
+        const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+        setProjects(projects.map(project => 
+          project.id === selectedProjectId 
+            ? { ...project, sectionTaskCounts } 
+            : project
+        ))
       } catch (error) {
         console.error('Error refreshing sections:', error)
         setNotification({

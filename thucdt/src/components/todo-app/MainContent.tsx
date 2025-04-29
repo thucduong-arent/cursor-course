@@ -28,6 +28,7 @@ type Project = {
   count: number
   selected?: boolean
   icon?: string
+  sectionTaskCounts?: Record<string, number>
 }
 
 interface MainContentProps {
@@ -199,6 +200,31 @@ export default function MainContent({
     }
   }
 
+  // Function to get task count for a section
+  const getSectionTaskCount = (sectionId: string): number => {
+    if (selectedProject?.sectionTaskCounts && selectedProject.sectionTaskCounts[sectionId] !== undefined) {
+      return selectedProject.sectionTaskCounts[sectionId]
+    }
+    // Fallback to the tasks array length if sectionTaskCounts is not available
+    const section = sections.find(s => s.id === sectionId)
+    if (section) {
+      // Count all uncompleted tasks
+      const uncompletedTasks = section.tasks.filter(task => !task.completed)
+      
+      // Count uncompleted subtasks as well
+      const uncompletedSubtasks = uncompletedTasks.reduce((count, task) => {
+        if (task.subtasks) {
+          return count + task.subtasks.filter(subtask => !subtask.completed).length
+        }
+        return count
+      }, 0)
+      
+      // Total count is the sum of uncompleted tasks and uncompleted subtasks
+      return uncompletedTasks.length + uncompletedSubtasks
+    }
+    return 0
+  }
+
   if (!selectedProject) {
     return (
       <main className="flex-1 overflow-y-auto p-4">
@@ -291,8 +317,8 @@ export default function MainContent({
                     onClick={(e) => e.stopPropagation()}
                     size="md"
                   />
-                  <span className="ml-2 text-gray-400 text-sm">{section.tasks.length}</span>
-                  {section.tasks.length === 0 && (
+                  <span className="ml-2 text-gray-400 text-sm">{getSectionTaskCount(section.id)}</span>
+                  {getSectionTaskCount(section.id) === 0 && (
                     <button 
                       className="ml-auto p-1 rounded hover:bg-gray-100 text-gray-400"
                       onClick={(e) => handleDeleteSection(section.id, e)}

@@ -7,6 +7,7 @@ type Project = {
   count: number
   selected?: boolean
   icon?: string
+  sectionTaskCounts?: Record<string, number>
 }
 
 interface SidebarProps {
@@ -26,6 +27,16 @@ export default function Sidebar({
   selectProject,
   setDeleteConfirmProjectId
 }: SidebarProps) {
+  // Function to get total task count for a project
+  const getProjectTaskCount = (project: Project): number => {
+    if (project.sectionTaskCounts) {
+      return Object.values(project.sectionTaskCounts).reduce((sum, count) => sum + count, 0)
+    }
+    // If sectionTaskCounts is not available, we can't determine the count of non-completed tasks
+    // So we'll just return the project.count which should be updated by the parent component
+    return project.count
+  }
+
   return (
     <>
       {sidebarOpen && (
@@ -96,10 +107,10 @@ export default function Sidebar({
                         onClick={() => selectProject(project.id)}
                       >
                         <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                        <span className="text-sm">
+                        <span className="text-sm truncate max-w-[120px]" title={project.name}>
                           {project.name} {project.icon}
                         </span>
-                        <span className="ml-auto text-gray-400 text-sm">{project.count}</span>
+                        <span className="ml-auto text-gray-400 text-sm">{getProjectTaskCount(project)}</span>
                       </div>
                       <button
                         className="p-1 rounded hover:bg-gray-300 text-gray-500"
