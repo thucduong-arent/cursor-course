@@ -449,6 +449,20 @@ export default function TodoApp() {
     }
   }
 
+  const refreshProjects = async () => {
+    try {
+      const userProjects = await fetchUserProjects()
+      setProjects(userProjects)
+    } catch (error) {
+      console.error('Error refreshing projects:', error)
+      setNotification({
+        show: true,
+        message: 'Failed to refresh projects',
+        type: 'error'
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -480,6 +494,7 @@ export default function TodoApp() {
           toggleTaskCollapse={toggleTaskCollapse}
           setNotification={setNotification}
           refreshSections={refreshSections}
+          refreshProjects={refreshProjects}
         />
       </div>
 

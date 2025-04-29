@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, MoreHorizontal, Plus, User, Layout, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useState, useRef, useEffect } from "react"
 
 type Task = {
   id: string
@@ -42,6 +43,7 @@ interface MainContentProps {
   toggleTaskCollapse: (sectionId: string, taskId: string) => void
   setNotification: (notification: { show: boolean; message: string; type: 'success' | 'error' }) => void
   refreshSections: () => void
+  refreshProjects: () => void
 }
 
 export default function MainContent({
@@ -57,8 +59,28 @@ export default function MainContent({
   toggleSubtask,
   toggleTaskCollapse,
   setNotification,
-  refreshSections
+  refreshSections,
+  refreshProjects
 }: MainContentProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedName, setEditedName] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  // Update editedName when selectedProject changes
+  useEffect(() => {
+    if (selectedProject) {
+      setEditedName(selectedProject.name)
+    }
+  }, [selectedProject])
+  
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      // Select all text in the input
+      inputRef.current.select()
+    }
+  }, [isEditing])
   
   const handleDeleteSection = async (sectionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -87,6 +109,75 @@ export default function MainContent({
       })
     }
   }
+  
+  const handleProjectNameEdit = () => {
+    setIsEditing(true)
+  }
+  
+  const handleProjectNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedName(e.target.value)
+  }
+  
+  const handleProjectNameBlur = async () => {
+    setIsEditing(false)
+    
+    // Only submit if the name has changed and is not empty
+    if (editedName.trim() !== selectedProject?.name && editedName.trim() !== "") {
+      try {
+        const response = await fetch(`/api/projects/${selectedProject?.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: editedName.trim() }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update project name')
+        }
+        
+        setNotification({
+          show: true,
+          message: 'Project name updated successfully',
+          type: 'success'
+        })
+        
+        // Refresh both sections and projects to get updated data
+        refreshSections()
+        refreshProjects()
+      } catch (error) {
+        console.error('Error updating project name:', error)
+        setNotification({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to update project name',
+          type: 'error'
+        })
+        // Reset to original name on error
+        if (selectedProject) {
+          setEditedName(selectedProject.name)
+        }
+      }
+    } else {
+      // Reset to original name if no change or empty
+      if (selectedProject) {
+        setEditedName(selectedProject.name)
+      }
+    }
+  }
+  
+  const handleProjectNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      inputRef.current?.blur()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      if (selectedProject) {
+        setEditedName(selectedProject.name)
+      }
+      setIsEditing(false)
+    }
+  }
 
   if (!selectedProject) {
     return (
@@ -105,7 +196,24 @@ export default function MainContent({
     <main className="flex-1 overflow-y-auto p-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold">{selectedProject.name}</h1>
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editedName}
+              onChange={handleProjectNameChange}
+              onBlur={handleProjectNameBlur}
+              onKeyDown={handleProjectNameKeyDown}
+              className="text-xl font-bold bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500 px-1 py-0.5"
+            />
+          ) : (
+            <h1 
+              className="text-xl font-bold cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+              onClick={handleProjectNameEdit}
+            >
+              {selectedProject.name}
+            </h1>
+          )}
           <div className="flex items-center gap-2">
             <button 
               className="px-3 py-1 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
