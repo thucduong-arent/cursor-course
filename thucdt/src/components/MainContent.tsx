@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, MoreHorizontal, Plus, User, Layout } from "lucide-react"
+import { ChevronDown, ChevronRight, MoreHorizontal, Plus, User, Layout, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type Task = {
@@ -41,6 +41,7 @@ interface MainContentProps {
   toggleSubtask: (sectionId: string, taskId: string, subtaskId: string) => void
   toggleTaskCollapse: (sectionId: string, taskId: string) => void
   setNotification: (notification: { show: boolean; message: string; type: 'success' | 'error' }) => void
+  refreshSections: () => void
 }
 
 export default function MainContent({
@@ -55,8 +56,38 @@ export default function MainContent({
   toggleTask,
   toggleSubtask,
   toggleTaskCollapse,
-  setNotification
+  setNotification,
+  refreshSections
 }: MainContentProps) {
+  
+  const handleDeleteSection = async (sectionId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      const response = await fetch(`/api/sections/${sectionId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete section')
+      }
+
+      setNotification({
+        show: true,
+        message: 'Section deleted successfully',
+        type: 'success'
+      })
+      
+      // Refresh sections after successful deletion
+      refreshSections()
+    } catch (error) {
+      setNotification({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to delete section',
+        type: 'error'
+      })
+    }
+  }
+
   if (!selectedProject) {
     return (
       <main className="flex-1 overflow-y-auto p-4">
@@ -131,9 +162,14 @@ export default function MainContent({
                   )}
                   <h2 className="font-medium ml-1">{section.name}</h2>
                   <span className="ml-2 text-gray-400 text-sm">{section.tasks.length}</span>
-                  <button className="ml-auto p-1 rounded hover:bg-gray-100">
-                    <MoreHorizontal size={16} className="text-gray-400" />
-                  </button>
+                  {section.tasks.length === 0 && (
+                    <button 
+                      className="ml-auto p-1 rounded hover:bg-gray-100 text-gray-400"
+                      onClick={(e) => handleDeleteSection(section.id, e)}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
 
                 {!section.collapsed && (

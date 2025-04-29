@@ -373,7 +373,10 @@ export default function TodoApp() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create section')
+        // Pass the status code along with the error
+        const error = new Error(data.error || 'Failed to create project') as ApiError
+        error.status = response.status
+        throw error
       }
 
       // Refresh the sections
@@ -430,6 +433,22 @@ export default function TodoApp() {
     }
   }
 
+  const refreshSections = async () => {
+    if (selectedProjectId) {
+      try {
+        const updatedSections = await fetchProjectData(selectedProjectId)
+        setSections(updatedSections)
+      } catch (error) {
+        console.error('Error refreshing sections:', error)
+        setNotification({
+          show: true,
+          message: 'Failed to refresh sections',
+          type: 'error'
+        })
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -460,6 +479,7 @@ export default function TodoApp() {
           toggleSubtask={toggleSubtask}
           toggleTaskCollapse={toggleTaskCollapse}
           setNotification={setNotification}
+          refreshSections={refreshSections}
         />
       </div>
 
