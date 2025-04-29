@@ -65,6 +65,9 @@ export default function MainContent({
   const [isEditing, setIsEditing] = useState(false)
   const [editedName, setEditedName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
+  const [editedSectionName, setEditedSectionName] = useState("")
+  const sectionInputRef = useRef<HTMLInputElement>(null)
   
   // Update editedName when selectedProject changes
   useEffect(() => {
@@ -81,6 +84,15 @@ export default function MainContent({
       inputRef.current.select()
     }
   }, [isEditing])
+  
+  // Focus section input when editing starts
+  useEffect(() => {
+    if (editingSectionId && sectionInputRef.current) {
+      sectionInputRef.current.focus()
+      // Select all text in the input
+      sectionInputRef.current.select()
+    }
+  }, [editingSectionId])
   
   const handleDeleteSection = async (sectionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -179,6 +191,64 @@ export default function MainContent({
     }
   }
 
+  const handleSectionNameEdit = (sectionId: string, currentName: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingSectionId(sectionId)
+    setEditedSectionName(currentName)
+  }
+  
+  const handleSectionNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedSectionName(e.target.value)
+  }
+  
+  const handleSectionNameBlur = async (sectionId: string, currentName: string) => {
+    setEditingSectionId(null)
+    
+    // Only submit if the name has changed and is not empty
+    if (editedSectionName.trim() !== currentName && editedSectionName.trim() !== "") {
+      try {
+        const response = await fetch(`/api/sections/${sectionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: editedSectionName.trim() }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update section name')
+        }
+        
+        setNotification({
+          show: true,
+          message: 'Section name updated successfully',
+          type: 'success'
+        })
+        
+        // Refresh sections to get updated data
+        refreshSections()
+      } catch (error) {
+        console.error('Error updating section name:', error)
+        setNotification({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to update section name',
+          type: 'error'
+        })
+      }
+    }
+  }
+  
+  const handleSectionNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, sectionId: string, currentName: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      sectionInputRef.current?.blur()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingSectionId(null)
+    }
+  }
+
   if (!selectedProject) {
     return (
       <main className="flex-1 overflow-y-auto p-4">
@@ -268,7 +338,25 @@ export default function MainContent({
                   ) : (
                     <ChevronDown size={18} className="text-gray-400" />
                   )}
-                  <h2 className="font-medium ml-1">{section.name}</h2>
+                  {editingSectionId === section.id ? (
+                    <input
+                      ref={sectionInputRef}
+                      type="text"
+                      value={editedSectionName}
+                      onChange={handleSectionNameChange}
+                      onBlur={() => handleSectionNameBlur(section.id, section.name)}
+                      onKeyDown={(e) => handleSectionNameKeyDown(e, section.id, section.name)}
+                      className="font-medium ml-1 bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500 px-1 py-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <h2 
+                      className="font-medium ml-1 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                      onClick={(e) => handleSectionNameEdit(section.id, section.name, e)}
+                    >
+                      {section.name}
+                    </h2>
+                  )}
                   <span className="ml-2 text-gray-400 text-sm">{section.tasks.length}</span>
                   {section.tasks.length === 0 && (
                     <button 
