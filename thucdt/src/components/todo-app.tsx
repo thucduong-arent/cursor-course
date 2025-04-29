@@ -15,6 +15,8 @@ import {
   Home,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import ProjectModal from "./ProjectModal"
+import Notification from "@/app/components/Notification"
 
 type Task = {
   id: string
@@ -82,6 +84,13 @@ export default function TodoApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sections, setSections] = useState<Section[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success' as 'success' | 'error'
+  })
 
   useEffect(() => {
     setSections(initialSections)
@@ -149,6 +158,58 @@ export default function TodoApp() {
         selected: project.id === projectId,
       })),
     )
+  }
+
+  const handleCreateProject = async (name: string) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create project')
+      }
+
+      // Add the new project to the list
+      const newProject = {
+        id: data.project.id,
+        name: data.project.name,
+        count: 0,
+        selected: true,
+      }
+
+      // Update projects list, deselecting all other projects
+      setProjects(
+        projects.map((project) => ({
+          ...project,
+          selected: false,
+        })).concat(newProject)
+      )
+      
+      // Show success notification
+      setNotification({
+        show: true,
+        message: 'Project created successfully',
+        type: 'success'
+      })
+    } catch (error) {
+      console.error('Error creating project:', error)
+      // Show error notification
+      setNotification({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to create project',
+        type: 'error'
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -221,7 +282,23 @@ export default function TodoApp() {
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium">My Projects</h3>
-                  <span className="text-xs text-gray-500">USED: 5/5</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="p-1 rounded hover:bg-gray-200"
+                      onClick={() => setIsProjectModalOpen(true)}
+                    >
+                      <Plus size={16} className="text-gray-500" />
+                    </button>
+                    <button
+                      className="p-1 rounded hover:bg-gray-200"
+                      onClick={() => {
+                        // TODO: Show popup/modal for project name edit
+                        // Will need state management for selected project
+                      }}
+                    >
+                      <MoreHorizontal size={16} className="text-gray-500" />
+                    </button>
+                  </div>
                 </div>
                 <ul className="space-y-1">
                   {projects.map((project) => (
@@ -353,6 +430,21 @@ export default function TodoApp() {
           </div>
         </main>
       </div>
+
+      {/* Project Creation Modal */}
+      <ProjectModal
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        onSubmit={handleCreateProject}
+      />
+
+      {/* Notification */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.show}
+        onClose={() => setNotification({ ...notification, show: false })}
+      />
     </div>
   )
 }
