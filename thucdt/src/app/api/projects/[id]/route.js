@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabaseClient'
-import { getUserIdFromEmail } from '@/lib/userUtils'
+import { getUserIdFromEmail } from '@/lib/authUtils'
 
 // GET a specific project
 export async function GET(request, context) {
