@@ -73,6 +73,11 @@ const initialSections: Section[] = [
   },
 ]
 
+// Custom error type with status code
+interface ApiError extends Error {
+  status?: number;
+}
+
 // Function to fetch projects from the API
 async function fetchUserProjects() {
   try {
@@ -232,7 +237,10 @@ export default function TodoApp() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create project')
+        // Pass the status code along with the error
+        const error = new Error(data.error || 'Failed to create project') as ApiError
+        error.status = response.status
+        throw error
       }
 
       // Refresh the projects list
@@ -253,6 +261,8 @@ export default function TodoApp() {
         message: error instanceof Error ? error.message : 'Failed to create project',
         type: 'error'
       })
+      // Re-throw the error so the ProjectModal can handle it
+      throw error
     } finally {
       setIsLoading(false)
     }

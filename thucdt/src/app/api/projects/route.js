@@ -85,6 +85,29 @@ export async function POST(request) {
       )
     }
 
+    // Check if project with the same name already exists for this user
+    const { data: existingProject, error: checkError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('name', name)
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      console.error('Error checking for existing project:', checkError)
+      return NextResponse.json(
+        { error: 'Failed to check for existing project' },
+        { status: 500 }
+      )
+    }
+
+    if (existingProject) {
+      return NextResponse.json(
+        { error: 'A project with this name already exists' },
+        { status: 409 } // 409 Conflict
+      )
+    }
+
     // Create new project
     const { data, error } = await supabase
       .from('projects')

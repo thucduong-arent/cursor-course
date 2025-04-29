@@ -9,14 +9,21 @@ interface ProjectModalProps {
   onSubmit: (name: string) => Promise<void>
 }
 
+// Custom error type with status code
+interface ApiError extends Error {
+  status?: number;
+}
+
 export default function ProjectModal({ isOpen, onClose, onSubmit }: ProjectModalProps) {
   const [projectName, setProjectName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus()
+      setError(null)
     }
   }, [isOpen])
 
@@ -25,12 +32,21 @@ export default function ProjectModal({ isOpen, onClose, onSubmit }: ProjectModal
     if (!projectName.trim()) return
 
     setIsSubmitting(true)
+    setError(null)
     try {
       await onSubmit(projectName)
       setProjectName('')
       onClose()
     } catch (error) {
       console.error('Error creating project:', error)
+      const apiError = error as ApiError
+      
+      // Check status code instead of error message
+      if (apiError.status === 409) {
+        setError('A project with this name already exists. Please choose a different name.')
+      } else {
+        setError('Failed to create project. Please try again.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -69,9 +85,12 @@ export default function ProjectModal({ isOpen, onClose, onSubmit }: ProjectModal
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full p-3 border rounded-lg text-lg"
+                className={`w-full p-3 border rounded-lg text-lg ${error ? 'border-red-500' : ''}`}
                 autoComplete="off"
               />
+              {error && (
+                <p className="mt-2 text-red-500 text-sm">{error}</p>
+              )}
             </div>
             
             <div className="flex justify-end gap-3 mt-8">
