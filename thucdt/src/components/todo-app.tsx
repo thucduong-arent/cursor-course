@@ -13,6 +13,7 @@ import {
   HelpCircle,
   Menu,
   Home,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ProjectModal from "./ProjectModal"
@@ -72,13 +73,50 @@ const initialSections: Section[] = [
   },
 ]
 
-const initialProjects: Project[] = [
-  { id: "project-1", name: "Personal", count: 6, icon: "🌟" },
-  { id: "project-2", name: "Zapier Work", count: 7 },
-  { id: "project-3", name: "Very real project", count: 4, selected: true },
-  { id: "project-4", name: "Another real project", count: 0 },
-  { id: "project-5", name: "This one is also important", count: 0 },
-]
+// Function to fetch projects from the API
+async function fetchUserProjects() {
+  try {
+    const response = await fetch('/api/projects')
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to fetch projects')
+    }
+    
+    const data = await response.json()
+    
+    // Transform the API response to match our Project type
+    return data.projects.map((project: any) => ({
+      id: project.id,
+      name: project.name,
+      count: project.task_count || 0,
+      selected: false,
+      icon: project.icon || ''
+    }))
+  } catch (error) {
+    console.error('Error fetching projects:', error)
+    return []
+  }
+}
+
+// Function to delete a project
+async function deleteProject(projectId: string) {
+  try {
+    const response = await fetch(`/api/projects/${projectId}`, {
+      method: 'DELETE',
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to delete project')
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error deleting project:', error)
+    throw error
+  }
+}
 
 export default function TodoApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -91,10 +129,30 @@ export default function TodoApp() {
     message: '',
     type: 'success' as 'success' | 'error'
   })
+  const [deleteConfirmProjectId, setDeleteConfirmProjectId] = useState<string | null>(null)
 
   useEffect(() => {
     setSections(initialSections)
-    setProjects(initialProjects)
+    
+    // Fetch projects from the API
+    const loadProjects = async () => {
+      setIsLoading(true)
+      try {
+        const userProjects = await fetchUserProjects()
+        setProjects(userProjects)
+      } catch (error) {
+        console.error('Error loading projects:', error)
+        setNotification({
+          show: true,
+          message: 'Failed to load projects',
+          type: 'error'
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    loadProjects()
   }, [])
 
   const toggleSection = (sectionId: string) => {
@@ -177,21 +235,9 @@ export default function TodoApp() {
         throw new Error(data.error || 'Failed to create project')
       }
 
-      // Add the new project to the list
-      const newProject = {
-        id: data.project.id,
-        name: data.project.name,
-        count: 0,
-        selected: true,
-      }
-
-      // Update projects list, deselecting all other projects
-      setProjects(
-        projects.map((project) => ({
-          ...project,
-          selected: false,
-        })).concat(newProject)
-      )
+      // Refresh the projects list
+      const userProjects = await fetchUserProjects()
+      setProjects(userProjects)
       
       // Show success notification
       setNotification({
@@ -209,6 +255,34 @@ export default function TodoApp() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDeleteProject = async (projectId: string) => {
+    setIsLoading(true)
+    try {
+      await deleteProject(projectId)
+      
+      // Remove the project from the state
+      setProjects(projects.filter(project => project.id !== projectId))
+      
+      // Show success notification
+      setNotification({
+        show: true,
+        message: 'Project deleted successfully',
+        type: 'success'
+      })
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      // Show error notification
+      setNotification({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to delete project',
+        type: 'error'
+      })
+    } finally {
+      setIsLoading(false)
+      setDeleteConfirmProjectId(null)
     }
   }
 
@@ -301,22 +375,46 @@ export default function TodoApp() {
                   </div>
                 </div>
                 <ul className="space-y-1">
-                  {projects.map((project) => (
-                    <li
-                      key={project.id}
-                      onClick={() => selectProject(project.id)}
-                      className={cn(
-                        "flex items-center gap-2 p-2 rounded cursor-pointer",
-                        project.selected ? "bg-gray-200" : "hover:bg-gray-200",
-                      )}
-                    >
-                      <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                      <span>
-                        {project.name} {project.icon}
-                      </span>
-                      <span className="ml-auto text-gray-400 text-sm">{project.count}</span>
+                  {isLoading ? (
+                    <li className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
+                      <span className="ml-2 text-gray-500">Loading projects...</span>
                     </li>
-                  ))}
+                  ) : projects.length === 0 ? (
+                    <li className="flex items-center justify-center p-4 text-gray-500">
+                      No projects found. Create one to get started.
+                    </li>
+                  ) : (
+                    projects.map((project) => (
+                      <li
+                        key={project.id}
+                        className={cn(
+                          "flex items-center gap-2 p-2 rounded",
+                          project.selected ? "bg-gray-200" : "hover:bg-gray-200",
+                        )}
+                      >
+                        <div 
+                          className="flex items-center gap-2 flex-1 cursor-pointer"
+                          onClick={() => selectProject(project.id)}
+                        >
+                          <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                          <span>
+                            {project.name} {project.icon}
+                          </span>
+                          <span className="ml-auto text-gray-400 text-sm">{project.count}</span>
+                        </div>
+                        <button
+                          className="p-1 rounded hover:bg-gray-300 text-gray-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmProjectId(project.id);
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))
+                  )}
                 </ul>
               </div>
             </nav>
@@ -437,6 +535,31 @@ export default function TodoApp() {
         onClose={() => setIsProjectModalOpen(false)}
         onSubmit={handleCreateProject}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmProjectId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium mb-4">Delete Project</h3>
+            <p className="mb-6">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                onClick={() => setDeleteConfirmProjectId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                onClick={() => handleDeleteProject(deleteConfirmProjectId)}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification */}
       <Notification
