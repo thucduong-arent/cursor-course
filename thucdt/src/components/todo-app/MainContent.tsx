@@ -278,25 +278,6 @@ export default function MainContent({
           </div>
         ) : (
           <>
-            <button 
-              className="w-full text-left mb-4 flex items-center text-gray-500 hover:bg-gray-100 p-2 rounded"
-              onClick={() => {
-                if (sections.length > 0) {
-                  setSelectedSectionId(sections[0].id)
-                  setIsTaskModalOpen(true)
-                } else {
-                  setNotification({
-                    show: true,
-                    message: 'Please create a section first',
-                    type: 'error'
-                  })
-                }
-              }}
-            >
-              <Plus size={16} className="mr-2" />
-              Add task
-            </button>
-
             {/* Sections */}
             {sections.map((section) => (
               <div key={section.id} className="mb-6">
