@@ -68,6 +68,9 @@ export default function MainContent({
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
   const [editedSectionName, setEditedSectionName] = useState("")
   const sectionInputRef = useRef<HTMLInputElement>(null)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [editedTaskTitle, setEditedTaskTitle] = useState("")
+  const taskInputRef = useRef<HTMLInputElement>(null)
   
   // Update editedName when selectedProject changes
   useEffect(() => {
@@ -93,6 +96,15 @@ export default function MainContent({
       sectionInputRef.current.select()
     }
   }, [editingSectionId])
+  
+  // Focus task input when editing starts
+  useEffect(() => {
+    if (editingTaskId && taskInputRef.current) {
+      taskInputRef.current.focus()
+      // Select all text in the input
+      taskInputRef.current.select()
+    }
+  }, [editingTaskId])
   
   const handleDeleteSection = async (sectionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -249,6 +261,64 @@ export default function MainContent({
     }
   }
 
+  const handleTaskTitleEdit = (taskId: string, currentTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingTaskId(taskId)
+    setEditedTaskTitle(currentTitle)
+  }
+  
+  const handleTaskTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedTaskTitle(e.target.value)
+  }
+  
+  const handleTaskTitleBlur = async (taskId: string, currentTitle: string) => {
+    setEditingTaskId(null)
+    
+    // Only submit if the title has changed and is not empty
+    if (editedTaskTitle.trim() !== currentTitle && editedTaskTitle.trim() !== "") {
+      try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title: editedTaskTitle.trim() }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update task title')
+        }
+        
+        setNotification({
+          show: true,
+          message: 'Task title updated successfully',
+          type: 'success'
+        })
+        
+        // Refresh sections to get updated data
+        refreshSections()
+      } catch (error) {
+        console.error('Error updating task title:', error)
+        setNotification({
+          show: true,
+          message: error instanceof Error ? error.message : 'Failed to update task title',
+          type: 'error'
+        })
+      }
+    }
+  }
+  
+  const handleTaskTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, taskId: string, currentTitle: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      taskInputRef.current?.blur()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingTaskId(null)
+    }
+  }
+
   if (!selectedProject) {
     return (
       <main className="flex-1 overflow-y-auto p-4">
@@ -381,7 +451,31 @@ export default function MainContent({
                           </button>
                           <div className="flex-1">
                             <div className="flex items-start">
-                              <span className={cn(task.completed && "line-through text-gray-400")}>{task.title}</span>
+                              {editingTaskId === task.id ? (
+                                <input
+                                  ref={taskInputRef}
+                                  type="text"
+                                  value={editedTaskTitle}
+                                  onChange={handleTaskTitleChange}
+                                  onBlur={() => handleTaskTitleBlur(task.id, task.title)}
+                                  onKeyDown={(e) => handleTaskTitleKeyDown(e, task.id, task.title)}
+                                  className={cn(
+                                    "bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500 px-1 py-0.5 w-full",
+                                    task.completed && "line-through text-gray-400"
+                                  )}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                <span 
+                                  className={cn(
+                                    "cursor-pointer hover:bg-gray-100 px-2 py-1 rounded",
+                                    task.completed && "line-through text-gray-400"
+                                  )}
+                                  onClick={(e) => handleTaskTitleEdit(task.id, task.title, e)}
+                                >
+                                  {task.title}
+                                </span>
+                              )}
                             </div>
                             {task.due_date && (
                               <div className="mt-1">
