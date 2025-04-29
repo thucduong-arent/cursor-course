@@ -206,27 +206,62 @@ export default function TodoApp() {
     )
   }
 
-  const toggleTask = (sectionId: string, taskId: string) => {
-    // Update the sections state
-    const updatedSections = sections.map((section) =>
-      section.id === sectionId
-        ? {
-            ...section,
-            tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)),
-          }
-        : section,
-    )
-    
-    setSections(updatedSections)
-    
-    // Update task counts if a project is selected
-    if (selectedProjectId) {
-      const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
-      setProjects(projects.map(project => 
-        project.id === selectedProjectId 
-          ? { ...project, sectionTaskCounts } 
-          : project
-      ))
+  const toggleTask = async (sectionId: string, taskId: string) => {
+    try {
+      // Find the task to get its current completed status
+      const section = sections.find(s => s.id === sectionId)
+      const task = section?.tasks.find(t => t.id === taskId)
+      
+      if (!task) return
+      
+      // Toggle the completed status
+      const newCompletedStatus = !task.completed
+      
+      // Update the task in the database
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: task.title,
+          is_completed: newCompletedStatus
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update task')
+      }
+      
+      // Update the sections state
+      const updatedSections = sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              tasks: section.tasks.map((task) => (task.id === taskId ? { ...task, completed: newCompletedStatus } : task)),
+            }
+          : section,
+      )
+      
+      setSections(updatedSections)
+      
+      // Update task counts if a project is selected
+      if (selectedProjectId) {
+        const sectionTaskCounts = countTasksBySection(selectedProjectId, updatedSections)
+        setProjects(projects.map(project => 
+          project.id === selectedProjectId 
+            ? { ...project, sectionTaskCounts } 
+            : project
+        ))
+      }
+    } catch (error) {
+      console.error('Error toggling task:', error)
+      setNotification({
+        show: true,
+        message: error instanceof Error ? error.message : 'Failed to update task',
+        type: 'error'
+      })
     }
   }
 
