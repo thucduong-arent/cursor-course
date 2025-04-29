@@ -2,9 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ProjectModalProps {
   isOpen: boolean
@@ -42,42 +39,64 @@ export default function ProjectModal({ isOpen, onClose, onSubmit }: ProjectModal
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="">Create New Project</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md shadow-xl">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-2xl font-bold">Create a new project</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          Enter a name for your new project.
+        </p>
+        
         <form onSubmit={handleSubmit}>
-          <CardContent className="">
-            <div className="space-y-2">
-              <label htmlFor="project-name" className="text-sm font-medium">
-                Project Name
+          <div className="space-y-6">
+            <div>
+              <label className="block text-lg mb-2">
+                Project Name — A unique name to identify this project
               </label>
-              <Input
-                id="project-name"
+              <input
                 ref={inputRef}
+                type="text"
+                placeholder="Project Name"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                placeholder="Enter project name"
                 disabled={isSubmitting}
-                className=""
-                type="text"
+                className="w-full p-3 border rounded-lg text-lg"
+                autoComplete="off"
               />
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!projectName.trim() || isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create Project'}
-            </Button>
-          </CardFooter>
+            
+            <div className="flex justify-end gap-3 mt-8">
+              <button
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg text-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!projectName.trim() || isSubmitting}
+                className={`px-6 py-2 rounded-lg text-lg ${
+                  projectName.trim() && !isSubmitting
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'bg-blue-300 text-white cursor-not-allowed'
+                }`}
+              >
+                {isSubmitting ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
         </form>
-      </Card>
+      </div>
     </div>
   )
 } 

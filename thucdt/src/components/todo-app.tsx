@@ -363,15 +363,6 @@ export default function TodoApp() {
                     >
                       <Plus size={16} className="text-gray-500" />
                     </button>
-                    <button
-                      className="p-1 rounded hover:bg-gray-200"
-                      onClick={() => {
-                        // TODO: Show popup/modal for project name edit
-                        // Will need state management for selected project
-                      }}
-                    >
-                      <MoreHorizontal size={16} className="text-gray-500" />
-                    </button>
                   </div>
                 </div>
                 <ul className="space-y-1">
