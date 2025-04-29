@@ -3,21 +3,7 @@ import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabaseClient'
 import { getUserIdFromEmail } from '@/lib/userUtils'
 
-/**
- * Generate a random string of specified length
- * @param {number} length - Length of the random string
- * @returns {string} Random string
- */
-function generateRandomString(length) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
-
-// GET all API keys for the authenticated user
+// GET all projects for the authenticated user
 export async function GET(request) {
   try {
     // Get the session
@@ -40,24 +26,24 @@ export async function GET(request) {
       )
     }
 
-    // Fetch API keys for the user
+    // Fetch all projects for the user
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('projects')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching API keys:', error)
+      console.error('Error fetching projects:', error)
       return NextResponse.json(
-        { error: 'Failed to fetch API keys' },
+        { error: 'Failed to fetch projects' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ apiKeys: data })
+    return NextResponse.json({ projects: data })
   } catch (error) {
-    console.error('Error in GET /api/api-keys:', error)
+    console.error('Error in GET /api/projects:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -65,7 +51,7 @@ export async function GET(request) {
   }
 }
 
-// POST to create a new API key
+// POST to create a new project
 export async function POST(request) {
   try {
     // Get the session
@@ -90,44 +76,38 @@ export async function POST(request) {
 
     // Parse request body
     const body = await request.json()
-    const { name, limit } = body
+    const { name } = body
 
     if (!name) {
       return NextResponse.json(
-        { error: 'Name is required' },
+        { error: 'Project name is required' },
         { status: 400 }
       )
     }
 
-    // Create new API key
-    const newKey = {
-      name,
-      value: `thuc-${generateRandomString(40)}`,
-      usage: 0,
-      user_id: userId
-    }
-
-    if (limit) {
-      newKey.limit = limit
-    }
-
+    // Create new project
     const { data, error } = await supabase
-      .from('api_keys')
-      .insert([newKey])
+      .from('projects')
+      .insert([
+        {
+          name,
+          user_id: userId
+        }
+      ])
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating API key:', error)
+      console.error('Error creating project:', error)
       return NextResponse.json(
-        { error: 'Failed to create API key' },
+        { error: 'Failed to create project' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, project: data })
   } catch (error) {
-    console.error('Error in POST /api/api-keys:', error)
+    console.error('Error in POST /api/projects:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
