@@ -96,7 +96,7 @@ export default function Sidebar({
                         onClick={() => selectProject(project.id)}
                       >
                         <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                        <span>
+                        <span className="text-sm">
                           {project.name} {project.icon}
                         </span>
                         <span className="ml-auto text-gray-400 text-sm">{project.count}</span>
